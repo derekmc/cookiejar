@@ -236,6 +236,7 @@ if __name__ == "__main__":
         ["logout", userLogout, "logout"],
         ["mint", mintCoin, "mint (name) [supply] - mints an amount of a coin if possible (ie you are the issuer and it is not locked)."],
         ["connect", connectPeer, "connect (peer) ('invoice' | 'pay')"],
+        ["disconnect", disconnectPeer, "disconnect (peer) ('invoice' | 'pay')"],
         ["pay", payPeer, "give (peer) (currency) (amount)"],
         ["invoice", invoicePeer, "invoice (peer) (currency) (amount)"],
         ["check", createCheck, "check (name) (amount) -> checkid. Creates a check for amount specified."],
