@@ -25,8 +25,8 @@ CHECKS = "(checklist)"
 # Having many differnt "auth-hashes" mitigates against replay attacks in case a replacement host's security is compromised.
 #
 # To backup a server, the auth-hashes, the checks, and the account records are backed up separately.
-# Optionally, account records can split split into smaller sub-balances, and cycled on regularly intervals,
-# in order to obfuscate anonymous account balances and when transactions occur.
+# Optionally, account records can be split into smaller sub-balances, and cycled on regularly intervals,
+# in "transaction pools", in order to obfuscate anonymous account balances and when transactions occur or specfic accounts.
 #
 # Backing up of checks is more selective, and only shared with select peers, as only the check hash is stored to verify check
 # redemption.  For this reason as well, people storing money in only check form, should wait until the replacement host
@@ -55,8 +55,8 @@ CHECKS = "(checklist)"
 # 
 #
 # site-id : the id of the site, which is used as a salt with the root-cookie.
-# salt-_n : a site has several hashes for generating user specific auth-cookies.
-# root-cookie : 
+# salt-_n : Every auth-cookie requires a unique salt.
+# root-cookie : the primary secret token owned by the user, used to generate all other cookies in combination with various salts, etc.
 # site-pre-cookie : h(site-id + root-cookie) -- shared with 'host' only once, not stored permanently
 # site-cookie : h(site-pre)
 # site-post-cookie : h(site-cookie) -- because the site-cookie should never be shared with other hosts, this token is used instead for generating backup-secrets.
@@ -103,7 +103,6 @@ CHECKS = "(checklist)"
 # Note: if the 'fromsite' is hacked and not simply taken down,
 #  the claim secret may be compromised.  In this case, 
 
-import pickledb
 loadData(DATAFILE)
 
 
@@ -151,12 +150,13 @@ def getitem(column, key):
 
 def loadData(filename):
     db = pickledb.load(filename, False)
-    f = open(filename, "r")
-    for line in f:
-        row = line.split(", ")
-        setitem(row)
+    #f = open(filename, "r")
+    #for line in f:
+    #    row = line.split(", ")
+    #    setitem(row)
         
 def saveData():
+    #print(
     db.dump()
 
 def userSignup(args):

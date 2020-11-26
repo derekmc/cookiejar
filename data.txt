@@ -1,0 +1,64 @@
+
+ ====================================
+ @                                  @
+ @   Cookie-Jar Data Definitions    @
+ @                                  @
+ ====================================
+
+   All tables are stored in a CSV format database, where the first column is the lookup key.
+
+
+
+
+ ==========================
+ @                        @
+ @    Private Tables      @
+ @                        @
+ ==========================
+ 
+   User
+  ==========================
+   User-Id, Site-Cookie 
+  
+  
+   Hosts
+  ==========================
+   Name, Url, Host-Id
+  
+  
+   Private Accounts
+  ==========================
+   User-Id . Currency-Id, Amount
+  
+  
+ 
+   Globals
+  ==========================
+   C
+
+
+ ===============================
+ @                             @
+ @   Public (Backup) Tables    @
+ @                             @
+ ===============================
+
+   Currencies
+  ==========================
+   Currency-Id, Namespace, Name, Supply
+  
+   Auth Hashes*
+  ==========================
+   User-Id | Auth-N, Salt, Auth-Hash
+  
+   Checks -- Backup Interval: Daily
+  ==========================
+   Check-Hash, Currency-Id, Amount
+
+   Backup Accounts -- Backup Interval: On-demand, in "transaction pools"-- up to 3 minute wait to group transactions.
+  ==========================
+   Acct-Id, Acct-Hash, Currency-Id, 
+ 
+ 
+ 
+
