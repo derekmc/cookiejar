@@ -197,11 +197,11 @@ def issueCurrency(args):
     print("TODO")
 
 # Issues a new check
-def giveCheck(args):
+def createCheck(args):
     print("TODO")
 
 # Accept a check
-def takeCheck(args):
+def acceptCheck(args):
     print("TODO")
 
 def splitCheck(args):
@@ -235,13 +235,14 @@ if __name__ == "__main__":
         ["login", userLogin, "login (name) (password)"],
         ["logout", userLogout, "logout"],
         ["mint", mintCoin, "mint (name) [supply] - mints an amount of a coin if possible (ie you are the issuer and it is not locked)."],
-        ["pay", giveCoin, "give (peer) (currency) (amount)"],
-        ["invoice", invoiceCoin, "invoice (peer) (currency) (amount)"],
         ["connect", connectPeer, "connect (peer) ('invoice' | 'pay')"],
-        ["spend", spendCheck, "spend (name) (amount) -> checkid. Creates a check for amount specified."],
-        ["accept", takeCheck, "take (checkid)"],
-        ["split", splitCheck, "split (checkid) (amounta) - Split a check into 2 smaller checks."],
-        ["join", joinCheck, "join (checkid) (checkid) - Join two checks into 1 large check."],
+        ["pay", payPeer, "give (peer) (currency) (amount)"],
+        ["invoice", invoicePeer, "invoice (peer) (currency) (amount)"],
+        ["check", createCheck, "check (name) (amount) -> checkid. Creates a check for amount specified."],
+        ["accept", acceptCheck, "take (checkid)"],
+        ["split", splitCheck, "split (checkid) (amount...) - Split a check into n smaller checks."],
+        ["join", joinCheck, "join (checkid) (checkid) - Join two or more checks into 1 large check."],
+        ["joinsplit", joinSplitCheck, "joinsplit (checkid) (checkid...) (amount...)"],
         ["supply", showSupply, "show the supply of all currencies"],
         ["account", showAccount, "show all your account balances"],
         ["backup", backupData, "get all the 'backup' hash fields"],

@@ -20,7 +20,7 @@
   
    Private Accounts
   ==========================
-   User-Id + Currency-Id, Amount
+   User-Id | Currency-Id, Amount
  
 
  ===============================
@@ -36,7 +36,7 @@
 
    Hosts: As needed, up to 1 hour.
   ==========================
-   Host-Name, Url, Host-Id (Salt)
+   Host-Name, Url, Site-Id (Salt)
  
    Currencies -- Backup Interval: As needed, up to 15 minutes.
   ==========================
