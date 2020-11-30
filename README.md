@@ -66,6 +66,9 @@ Once you have set the user'
 
 There may also be a daemon program written to handle scheduled backups and batching of account transactions. (TODO, maybe)
 
+## Prototype TODO
+
+Figure out how to use the python file as a "shell" program: Do we want to bundle and/or amalgamate it into a single file?
 
 # Client and Server Functions
 
