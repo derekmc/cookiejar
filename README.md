@@ -60,8 +60,6 @@ Once you have set the user'
 
 There may also be a daemon program written to handle scheduled backups and batching of account transactions. (TODO, maybe)
 
-# Semi-Distributed
-
 # Client and Server Functions
 
 please refer to cookiejar.py and cookiejar-client.py respectively to see the various server and client calls available.
