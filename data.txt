@@ -17,10 +17,18 @@
    User
   ==========================
    User-Id, Site-Cookie 
+ 
+   User Names
+  ==========================
+   User Name, User-id
+  
+   User Emails
+  ==========================
+   Email, User-id
   
    Private Accounts
   ==========================
-   User-Id | Currency-Id, Amount
+   User-Id : Currency-Id, Amount
  
 
  ===============================
@@ -44,7 +52,7 @@
   
    Auth Hashes -- Backup Interval: As needed, up to 15 minutes.
   ==========================
-   User-Id | Auth-N, Salt, Auth-Hash
+   User-Id : Auth-N, Salt, Auth-Hash
   
    Checks -- Backup Interval: Daily.
   ==========================
