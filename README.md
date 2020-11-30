@@ -43,6 +43,11 @@ Priorities
  * Clear
  * Efficient
 
+## No external dependencies
+
+The protocol implementation intentionally uses no external dependencies.  There is a custom data storage class in
+"table.py", and a custom command line parser/runner in "cmd.py".  These are both as simple as possible.
+
 Simplicity and Clarity are prioritized over efficiency, and that's why I created a custom "CSV" table based database,
 and implemented this in python, so it would be accessible to as many people as possible.
 
@@ -59,6 +64,7 @@ If you have comments to add on the security or administration of this prototype 
 Once you have set the user'
 
 There may also be a daemon program written to handle scheduled backups and batching of account transactions. (TODO, maybe)
+
 
 # Client and Server Functions
 

@@ -1,6 +1,4 @@
 
-import pickledb
-
 # load 
 import data
 data.loadAll()
