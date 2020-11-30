@@ -18,11 +18,11 @@
   ==========================
    User-Id, Site-Cookie 
  
-   User Names
+   User Names (serves to identify peers)
   ==========================
    User Name, User-id
   
-   User Emails
+   User Emails (serves to identify peers)
   ==========================
    Email, User-id
   
@@ -48,7 +48,7 @@
  
    Currencies -- Backup Interval: As needed, up to 15 minutes.
   ==========================
-   Currency-Id, Namespace, Name, Supply
+   Currency-Id, Namespace, Name, Issuer Supply
   
    Auth Hashes -- Backup Interval: As needed, up to 15 minutes.
   ==========================
@@ -64,5 +64,5 @@
  
    Backup Log
   ==========================
-   Table-Name, Backup-Version, Date-Time
+   Table-Name, Backup-Version, Datetime
 
