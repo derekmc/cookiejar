@@ -2,6 +2,7 @@
 # load 
 import data
 data.loadAll()
+data.saveAll()
 
 # Please see README.md for definitions on all the hashes and cookies, how they are computed, etc.
 
