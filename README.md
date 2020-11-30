@@ -57,38 +57,15 @@ besides the one time pad, ie some constructable solution for P = NP is found.
  * acct-hash : h(acct-id + backup-secret) -- the publicly shared token associated with every account.
  * acct:  <acct-id, acct-hash, currency-descriptor(including prime host and scope), balance>
 
-To claim accounts on a new service, ie cross-authenticate, a user must 
+To claim an account, or cross authenticate, the user must reveal the following to "new-host":
+ * user-id (on the original "host")
+ * backup-secret 
+ * auth-hash-(_n)
 
+To claim accounts on a new service, ie cross-authenticate, a user must reveal the correct backup-secret to 'new-host',
+along with some "auth-cookie" and their user-id on the original host.
+Auth cookies is required, to prevent the case where a 'new-host' goes rogue, and attempts
+replay attacks.  In this case, the highest indexed auth
 
-Identifier Definitions:
- * old-host-id : the id or global salt of the old host for cross authentication.
- * new-host-id : the id or global salt of the old host for cross authentication.
- * one-time-salt : a salt used just once for generating a specific cross authenticating token.
-
-when a user first registers 
-the client is given a number of one-time-salts
-
- * old-host-precookie = hash(old-host-id + root-user-secret) -- intermediate value, not shared with anyone
- * old-host-cookie = hash(old-host-precookie)
-
- * one-secret-old-host = hash(one-time-salt + old-host-precookie) -- only shared with 'new-host'
- * one-cookie-old-host = hash(one-secret-old-host) -- shared with 'old-host' when the old-host-cookie is first set on the old-host.
-
- * claim-secret = hash(backup-version-id + one-cookie-old-host) -- shared with 
- * claim-token = hash(new-site-id + one-claim-secret) -- old-host shares this with new-host
-
- * one-claim-token = hash(versionid + one-claim-secret
- * from-site-cookie = hash(fromsiteid + usersecret)
- * one-claim-secret = hash(remoteid + sitecookie)
- * one-claim-token = hash(versionid + claimsecret)
- * checksum = hash(datakey + versionid + hash(versionid + secret))
-
-To claim 
-When users cross authenticate, they should use a client that keeps track of which "one-time-salts" have been used,
-in order to identify when a service could potentially be 
-
-The "Version ID" serves as a salt. You can create several possible independent backups at ever backup checkpoint.
-Note: if the 'fromsite' is hacked and not simply taken down,
- the claim secret may be compromised.  In this case, 
 
 
