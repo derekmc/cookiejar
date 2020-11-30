@@ -7,7 +7,8 @@
 
 Writing a centralized currency server is a straightforward task, as it only requires what would be necessary for any other website or webservice.
 Most webservices use email, usernames and passwords, although a securely generated "cookie" is always sufficient to reliably and securely
-identify users.
+identify users, provided that a user wishes to be identified this way, and uses the same browser "client", or otherwise syncs their sessions
+between browsers/clients.
 Such services can rely on "cookies" as a universal method for identifying users.  Cookie Jar, similarly, doesn't require 
 a public key, password, or anything else, but instead uses a "rootcookie" which is hashed with a site specific salt, to 
 create a unique "sitecookie" for each particular site.
