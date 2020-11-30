@@ -1,5 +1,67 @@
 
 # Cookie Jar
+
+"Cookie Jar" is a simple "semi-distributed" digital currency platform.
+
+# Semi-Distributed
+
+Writing a centralized currency server is a straightforward task, as it only requires what would be necessary for any other website or webservice.
+Most webservices use email, usernames and passwords, although a securely generated "cookie" is generally sufficient.
+This mean it can rely exclusively on "cookies" for identifying users, and doesn't directly need to use any cryptographic algorithms, only
+relying on the existing security infrastructure for the web.
+
+While such a service is fairly straightforward, cookiejar has an additional goal, that "backups" for the main services "database" are publicly available,
+In order to anonymize data, different "records" are all linked by hashes, and a user shares the matching *pre-hash* when they want to claim 
+a backed up account on a replacement host.
+
+Semi-distributed services offer some of the pros and cons of both centralized and distributed systems.
+
+Because the host is centralized, you can achieve quick transaction speeds and it is easy for new users to join the network,
+
+Because the backups are shared publicly, there is a degree of censorship resistance and resiliency to service failure.
+
+# Host Replacement
+
+There is intentionally no set protocol for choosing or replacing hosts.  Any such protocol established a priori, would tend
+to introduce vulnerabilities, and not adapt well to changing needs.
+
+While it would be possible to establish a fixed protocol for replacing hosts, this is not recommended.  The best way,
+is for someone to simply startup the replacement service, and prove themselves reliable over time.
+
+
+# Prototype Implementation
+
+Priorities
+
+ * Correct
+ * Simple
+ * Clear
+ * Efficient
+
+Simplicity and Clarity are prioritized over efficiency, and that's why I created a custom "CSV" table based database,
+and implemented this in python, so it would be accessible to as many people as possible.
+
+To use the prototype server, create a custom ssh user, and use the "chsh" command to change their shell to "cookiejar.py"
+
+You may need to take additional steps to secure that user's account against escalation.
+
+For reference, please see the following question on stack overflow:
+
+* [How can I lock down an SSH and/or Telnet user to only run a custom shell and no other commands or programs](https://serverfault.com/questions/1043751/how-can-i-lock-down-an-ssh-and-or-telnet-user-to-only-run-a-custom-shell-and-no)
+
+If you have comments to add on the security or administration of this prototype service, any additional answers are appreciated.
+
+Once you have set the user'
+
+There may also be a daemon program written to handle scheduled backups and batching of account transactions. (TODO, maybe)
+
+# Semi-Distributed
+
+# Client and Server Functions
+
+please refer to cookiejar.py and cookiejar-client.py respectively to see the various server and client calls available.
+
+# Algorithms and hashes
 CookieJar is the world's first semi-distributed digital currency.
 It is not a proper "crypto" currency, as it does not use cryptographic algorithms besides basic 
 hashing functions, as well as established infrastructure for creating secure channels.
@@ -69,3 +131,16 @@ replay attacks.  In this case, the highest indexed auth
 
 
 
+# Cryptographic Apocalypse
+
+Cookie-jar, because of its simplicity, is well suited for a "cryptographic apocalypse"... This would essentially be if it is discovered that P = NP, 
+and specific algorithms are found to attack these problems.  Other methods for secure channels can be adopted, and cookie-jar will work with the
+new infrastructure, with the simple modification that cross-authenticating cookies must be mutually negotatied, instead of computed from hashes.
+
+Even if such an unlikely scenario never happens,  Cookie-jar's simplicity-- only relying on a single hash function and infastructure for secure channels,
+will make it easy to update when new cryptographic algorithms are created.
+
+# Crypto Concerns and Other Feedback
+
+As a prototype, I can promise perfect security, but the basic idea is sound.  If you have any potential weaknesses or vulnerabilities,
+feedback would be appreciated "derek7mc" at the email host "gmail".
