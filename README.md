@@ -7,8 +7,12 @@
 
 Writing a centralized currency server is a straightforward task, as it only requires what would be necessary for any other website or webservice.
 Most webservices use email, usernames and passwords, although a securely generated "cookie" is generally sufficient.
-This mean it can rely exclusively on "cookies" for identifying users, and doesn't directly need to use any cryptographic algorithms, only
-relying on the existing security infrastructure for the web.
+This means such services can rely on "cookies" as a universal method for identifying users.  Cookie Jar, similarly, doesn't require 
+a public key, password, or anything else, but instead uses a "rootcookie" which is hashed with a site specific salt, to 
+create a unique "sitecookie" for each particular site.
+
+Cookie Jar doesn't directly use any cryptographic algorithms besides basic hashing, it only
+relies on the existing security infrastructure for the web.
 
 While such a service is fairly straightforward, cookiejar has an additional goal, that "backups" for the main services "database" are publicly available,
 In order to anonymize data, different "records" are all linked by hashes, and a user shares the matching *pre-hash* when they want to claim 
