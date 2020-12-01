@@ -11,11 +11,12 @@ from cmd import addCommand, evalLoop, setPrompt
 def userSignup(args):
     # user, name, passwd
     name = args[0]
-    passwd = args[1]
-    coin = ""
-    uid = setitem(['user', name, passwd, coin])
+    siteprecookie = args[1]
+    print(name, siteprecookie)
+    # TODO generate auth hashes, etc.
+    uid = setitem(['user', name, siteprecookie])
     print(f" New user '{name}' successfully created.");
-    return uid
+    #return uid
 
 def userLogin(args):
     user = args[0]
@@ -39,6 +40,18 @@ def mintCoin(args):
     n = setitem(['coin', name, supply, locked])
     if locked:
         pass #TODO give check
+
+def connectPeer():
+    print("TODO")
+        
+def disconnectPeer():
+    print("TODO")
+        
+def payPeer():
+    print("TODO")
+        
+def invoicePeer():
+    print("TODO")
         
 
 # TODO none of these commands should run until the user has specified their cookie.
@@ -59,7 +72,6 @@ def splitCheck(args):
 def joinCheck(args):
     print("TODO")
     
-
 def showSupply(args):
     print("TODO")
 
@@ -76,10 +88,13 @@ def showSiteId(args):
 def setUserCookie(args):
     print("TODO")
 
+def claimBackup(args):
+    print("TODO")
+
 if __name__ == "__main__":
     commands = [
         ["id", showSiteId, "show the 'Site Id' which serves as a salt for generating the 'user cookie' and other data."],
-        ["signup", userSignup, "signup (name) (password)"],
+        ["signup", userSignup, "signup (name) (siteprecookie)"],
         ["cookie", setUserCookie, "cookie (cookie) - sets the \"User Cookie\" which should be generated from a \"User Secret\"\n UserCookie = hash(UserSecret + siteId)"],
         ["login", userLogin, "login (name) (password)"],
         ["logout", userLogout, "logout"],
@@ -92,7 +107,6 @@ if __name__ == "__main__":
         ["accept", acceptCheck, "take (checkid)"],
         ["split", splitCheck, "split (checkid) (amount...) - Split a check into n smaller checks."],
         ["join", joinCheck, "join (checkid) (checkid) - Join two or more checks into 1 large check."],
-        ["joinsplit", joinSplitCheck, "joinsplit (checkid) (checkid...) (amount...)"],
         ["supply", showSupply, "show the supply of all currencies"],
         ["account", showAccount, "show all your account balances"],
         ["backup", backupData, "get all the 'backup' hash fields"],
@@ -103,5 +117,5 @@ if __name__ == "__main__":
     for command in commands:
         addCommand(*command)
 
-    evalLoop(after=lambda x: savedb(datafile))
+    evalLoop(after=lambda x: data.saveAll())
 

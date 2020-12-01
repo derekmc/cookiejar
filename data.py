@@ -1,7 +1,6 @@
 
+import os, csv
 from collections import namedtuple
-import os
-import csv
 from table import Table
 
 # TODO set update interval for all public files
