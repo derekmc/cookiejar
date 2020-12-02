@@ -1,5 +1,6 @@
 
 # load 
+from hash import hash64
 import data
 data.loadAll()
 data.saveAll()
@@ -8,13 +9,18 @@ data.saveAll()
 
 from cmd import addCommand, evalLoop, setPrompt
 
+# TODO use password dictionary
 def userSignup(args):
-    # user, name, passwd
-    name = args[0]
-    siteprecookie = args[1]
+    # password or site-precookie
+    password = args[0]
+    sitecookie = h64(password)
+    email = ""
+    username = ""
+    if len(args) > 1:
+        name 
     print(name, siteprecookie)
     # TODO generate auth hashes, etc.
-    uid = setitem(['user', name, siteprecookie])
+    uid = data.users(['user', name, siteprecookie])
     print(f" New user '{name}' successfully created.");
     #return uid
 
@@ -94,7 +100,7 @@ def claimBackup(args):
 if __name__ == "__main__":
     commands = [
         ["id", showSiteId, "show the 'Site Id' which serves as a salt for generating the 'user cookie' and other data."],
-        ["signup", userSignup, "signup (name) (siteprecookie)"],
+        ["signup", userSignup, "signup (password) [username or email]\n Note: password must be unique and cannot be changed."],
         ["cookie", setUserCookie, "cookie (cookie) - sets the \"User Cookie\" which should be generated from a \"User Secret\"\n UserCookie = hash(UserSecret + siteId)"],
         ["login", userLogin, "login (name) (password)"],
         ["logout", userLogout, "logout"],

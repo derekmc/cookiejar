@@ -120,7 +120,8 @@ besides the one time pad, ie some constructable solution for P = NP is found.
  * salt-_n : Every auth-cookie requires a unique salt.
  * root-cookie : the primary secret token owned by the user, used to generate all other cookies in combination with various salts, etc.
  * site-pre-cookie : h(site-id + root-cookie) -- shared with 'host' only once, not stored permanently
- * site-cookie : h(site-pre-cookie)
+ * password : a manually chosen host specific alternative to pre-cookies
+ * site-cookie : h(site-pre-cookie or password)
  * site-post-cookie : h(site-cookie) -- because the site-cookie should never be shared with other hosts, this token is used instead for generating backup-secrets.
  * site-temp-cookie : an independently generated cookie token, so that clients don't have to send their site-cookie to the host every time.
  * auth-cookie-_n : h(site-cookie-pre + salt-n) -- the host generates these using site-pre-cookie, but does not store either.
