@@ -1,5 +1,6 @@
 
 from collections import namedtuple
+import traceback
 #import file
 
 Command = namedtuple('Command', 'f help')
@@ -43,7 +44,9 @@ def runCommand(args):
     elif name in commands:
         try:
             commands[name].f(args[1:])
-        except:
+        except Exception as e:
+            print(" Exception: ", e)
+            traceback.print_exc()
             print(" Command error or invalid arguments.")
     else:
         print(" Unknown Command: '%s'" % name)
@@ -51,7 +54,7 @@ def runCommand(args):
 def commandHelp(name):
     if name == "commands":
         print(" Available Commands: ", end="")
-        for name in commands:
+        for name in sorted(commands.keys()):
             print(name, end=", ")
         print()
     elif name in commands:

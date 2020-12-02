@@ -1,28 +1,67 @@
 
 # load 
-from hash import hash64
+from hash import hash
+from passwords import rare
 import data
 data.loadAll()
 data.saveAll()
+
+sitecookie = None
 
 # Please see README.md for definitions on all the hashes and cookies, how they are computed, etc.
 
 from cmd import addCommand, evalLoop, setPrompt
 
+SIGNUPFAIL = "Sorry, that password is not rare enough!"
 # TODO use password dictionary
 def userSignup(args):
     # password or site-precookie
+    # password is manually chosen, but site pre-cookie should be computed from hash(siteid + rootcookie)
     password = args[0]
-    sitecookie = h64(password)
-    email = ""
+    global sitecookie
+    sitecookie = hash(password)
+    # always compute checks to prevent timing attacks,
+    # that could guess if password is in use.
+    not_new = sitecookie in data.users
+    not_rare = not rare(password)
+    if not_new or not_rare:
+        print(SIGNUPFAIL)
+        return
     username = ""
+    email = ""
+    if len(args) > 3:
+        print("Sorry, 'signup' accepts at most 3 arguments (password) [username] [email]")
+        return
     if len(args) > 1:
-        name 
-    print(name, siteprecookie)
-    # TODO generate auth hashes, etc.
-    uid = data.users(['user', name, siteprecookie])
-    print(f" New user '{name}' successfully created.");
-    #return uid
+        username = args[1]
+        if username in data.names:
+            print("Sorry, that username is taken.")
+            return
+    if len(args) > 2:
+        email = args[2]
+        if email in data.emails:
+            print("Sorry, that email address is taken.")
+    data.users.addRow(sitecookie, username, email)
+    data.users.save()
+    if len(username):
+        data.names.addRow(username, sitecookie)
+        data.names.save()
+    if len(email):
+        data.emails.addRow(email, sitecookie, False)
+        data.emails.save()
+    print(f" New user created.");
+    print(f" Please use sitecookie: '{sitecookie}'\n to login in the future.")
+
+def whoami(args):
+    if sitecookie == None:
+        print(" Not logged in.")
+    else:
+        print(" First 4 characters of SiteCookie: %s" % str(sitecookie[:4]))
+        user = data.users[sitecookie]
+        if len(user[1]):
+            print(" Username: %s" % user[1])
+        if len(user[2]):
+            print(" Email: %s" % user[2])
 
 def userLogin(args):
     user = args[0]
@@ -100,9 +139,10 @@ def claimBackup(args):
 if __name__ == "__main__":
     commands = [
         ["id", showSiteId, "show the 'Site Id' which serves as a salt for generating the 'user cookie' and other data."],
-        ["signup", userSignup, "signup (password) [username or email]\n Note: password must be unique and cannot be changed."],
+        ["signup", userSignup, "signup (password) [username] [email]\n Note: password must be unique and cannot be changed."],
+        ["whoami", whoami, "whoami - displays info on the logged in user."],
         ["cookie", setUserCookie, "cookie (cookie) - sets the \"User Cookie\" which should be generated from a \"User Secret\"\n UserCookie = hash(UserSecret + siteId)"],
-        ["login", userLogin, "login (name) (password)"],
+        ["login", userLogin, "login (password)"],
         ["logout", userLogout, "logout"],
         ["mint", mintCoin, "mint (name) [supply] - mints an amount of a coin if possible (ie you are the issuer and it is not locked)."],
         ["connect", connectPeer, "connect (peer) ('invoice' | 'pay')"],
