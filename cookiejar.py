@@ -1,24 +1,44 @@
 
 # load 
+from util import randstr
 from hash import hash
 from passwords import rare
 import data
 data.loadAll()
 data.saveAll()
 
-sitecookie = None
+userid = None
 
 # Please see README.md for definitions on all the hashes and cookies, how they are computed, etc.
 
 from cmd import addCommand, evalLoop, setPrompt
 
+SALTLEN = 5
+# Salts are secret, in order to make cracking user passwords more difficult.
+# To provide the authhashes, a user must randomly guess the salts, so don't make this too long, but also not too short either.
+SALTSECRET = 5
+
+IDLEN = 10
+AUTHHASHES = 10
 SIGNUPFAIL = "Sorry, that password is not rare enough!"
 # TODO use password dictionary
+def authHashes(userid, password, n):
+    result = []
+    result.append(userid)
+    for i in range(n):
+        salt = randstr(SALTLEN)
+        authcookie = hash(password + salt)
+        authhash = hash(authcookie)
+        publicsalt = salt[:SALTLEN-SALTSECRET]
+        result.append(publicsalt)
+        result.append(authhash)
+    return result
+    
 def userSignup(args):
     # password or site-precookie
     # password is manually chosen, but site pre-cookie should be computed from hash(siteid + rootcookie)
     password = args[0]
-    global sitecookie
+    global userid
     sitecookie = hash(password)
     # always compute checks to prevent timing attacks,
     # that could guess if password is in use.
@@ -29,6 +49,10 @@ def userSignup(args):
         return
     username = ""
     email = ""
+    userid = randstr(IDLEN)
+    while(userid in data.users): #theoretically this could infinite loop, but when are we gonna have that many users?
+        userid = randstr(IDLEN)
+
     if len(args) > 3:
         print("Sorry, 'signup' accepts at most 3 arguments (password) [username] [email]")
         return
@@ -41,37 +65,64 @@ def userSignup(args):
         email = args[2]
         if email in data.emails:
             print("Sorry, that email address is taken.")
-    data.users.addRow(sitecookie, username, email)
+    data.authhashes.addRow(*authHashes(userid, password, AUTHHASHES))
+    data.authhashes.save()
+    data.cookies.addRow(sitecookie, userid)
+    data.cookies.save()
+    data.users.addRow(userid, username, email)
     data.users.save()
     if len(username):
-        data.names.addRow(username, sitecookie)
+        data.names.addRow(username, userid)
         data.names.save()
     if len(email):
-        data.emails.addRow(email, sitecookie, False)
+        data.emails.addRow(email, userid, False)
         data.emails.save()
-    print(f" New user created.");
-    print(f" Please use sitecookie: '{sitecookie}'\n to login in the future.")
+    print(f" New user created.")
+    print(f" User Id: {userid}")
+    print(f" SiteCookie: '{sitecookie}'.")
+    name = username
+    if len(name) == 0:
+        name = userid
+    setPrompt(f"{name} @ cookiejar> ")
+
+
+
+def userLoginPassword(args):
+    password = args[0]
+    cookie = hash(password)
+    userLoginCookie(cookie)
+
+def userLoginCookie(args):
+    cookie = args[0]
+    if not cookie in data.cookies:
+        print("Unknown user.")
+        return
+    global userid
+    userid = data.cookies[cookie][1]
+    name = data.users[sitecookie][1]
+    if len(name) == 0:
+        name = userid
+    setPrompt(f"{name} @ cookiejar> ")
+
 
 def whoami(args):
+    global userid
     if sitecookie == None:
         print(" Not logged in.")
     else:
-        print(" First 4 characters of SiteCookie: %s" % str(sitecookie[:4]))
-        user = data.users[sitecookie]
+        print(f" SiteCookie: {str(sitecookie)}")
+        user = data.users[userid]
+        if len(user[1]):
+            print(" User Id: %s" % user[0])
         if len(user[1]):
             print(" Username: %s" % user[1])
         if len(user[2]):
             print(" Email: %s" % user[2])
 
-def userLogin(args):
-    user = args[0]
-    passwd = args[1]
-    #user = getitem('user', current_user)
-    setPrompt(f"{user}@cookiejar> ")
-    pass
 
 def userLogout(args):
-    current_user = -1
+    global userid
+    userid = None
     print(" User logged out.")
     setPrompt("cookiejar> ")
     
@@ -86,11 +137,18 @@ def mintCoin(args):
     if locked:
         pass #TODO give check
 
+def showMessages():
+    print("TODO")
+
 def connectPeer():
     print("TODO")
         
 def disconnectPeer():
     print("TODO")
+
+def acceptPeer():
+    print("TODO")
+    
         
 def payPeer():
     print("TODO")
@@ -142,12 +200,16 @@ if __name__ == "__main__":
         ["signup", userSignup, "signup (password) [username] [email]\n Note: password must be unique and cannot be changed."],
         ["whoami", whoami, "whoami - displays info on the logged in user."],
         ["cookie", setUserCookie, "cookie (cookie) - sets the \"User Cookie\" which should be generated from a \"User Secret\"\n UserCookie = hash(UserSecret + siteId)"],
-        ["login", userLogin, "login (password)"],
+        ["login", userLoginPassword, "login (password) - Log in using your password (recommended to use cookie instead)."],
+        ["cookie", userLoginCookie, "cookie (cookie) - Log in using your cookie."],
+        ["messages", showMessages, "mssages - show messages, such as peer connect requests, payment or invoice requests, cashed check notifications."],
         ["logout", userLogout, "logout"],
         ["mint", mintCoin, "mint (name) [supply] - mints an amount of a coin if possible (ie you are the issuer and it is not locked)."],
-        ["connect", connectPeer, "connect (peer) ('invoice' | 'pay')"],
-        ["disconnect", disconnectPeer, "disconnect (peer) ('invoice' | 'pay')"],
-        ["pay", payPeer, "give (peer) (currency) (amount)"],
+        ["connect", connectPeer, "connect (peer) - request to connect to a peer, or accept a request to connect. Peers can invoice each other(an invoice must be accepted to initiate payment)."],
+        ["disconnect", disconnectPeer, "disconnect (peer)"],
+        # TODO: do we want to allow arbitrary messaging? ["say", speakPeer, "say (peer) (message)"],
+        # no rejecting ["reject", rejectPeer, "reject (peer) [invoice] - reject an outstanding"],
+        ["pay", payPeer, "pay (peer) (currency) (amount)"],
         ["invoice", invoicePeer, "invoice (peer) (currency) (amount)"],
         ["check", createCheck, "check (name) (amount) -> checkid. Creates a check for amount specified."],
         ["accept", acceptCheck, "take (checkid)"],
@@ -163,5 +225,6 @@ if __name__ == "__main__":
     for command in commands:
         addCommand(*command)
 
-    evalLoop(after=lambda x: data.saveAll())
+    evalLoop()
+    # evalLoop(after=lambda x: data.saveAll())
 

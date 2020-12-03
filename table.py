@@ -27,7 +27,11 @@ class Table:
         self.rows = {}
 
     def addRow(self, *row):
-        self.rows[row[0]] = self.TupleObject(*row)
+        if self.TupleObject:
+            datarow = self.TupleObject(*row)
+        else:
+            datarow = row
+        self.rows[row[0]] = datarow
 
     def getColumnField(self, key, field):
         getattr(self.rows[key], field)
@@ -42,9 +46,10 @@ class Table:
         self.rows[key][index] = value
 
     def __str__(self):
-        fields = self.TupleObject._fields
         result = ""
-        result += (", ").join(self.TupleObject._fields)
+        if self.TupleObject:
+            fields = self.TupleObject._fields
+            result += (", ").join(self.TupleObject._fields)
         for key in self.rows:
             row = self.rows[key]
             result += "\n" + (", ").join(row)
@@ -67,7 +72,10 @@ class Table:
         try:
             with open(self.filename, 'w') as csvfile:
                 writer = csv.writer(csvfile, dialect="excel", quoting=csv.QUOTE_ALL, delimiter=',')
-                writer.writerow(self.TupleObject._fields)
+                if self.TupleObject:
+                    writer.writerow(self.TupleObject._fields)
+                else:
+                    writer.writerow([])
                 for key in self.rows:
                     writer.writerow(self.rows[key])
             return True

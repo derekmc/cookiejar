@@ -17,12 +17,11 @@ if not os.path.exists(PRIVATE):
 if not os.path.exists(BACKUP):
     os.makedirs(BACKUP)
 
-
    
 # TODO handle claiming accounts
 
-
 USERS = os.path.join(PRIVATE, "users.csv")
+COOKIES = os.path.join(PRIVATE, "cookies.csv")
 NAMES = os.path.join(PRIVATE, "names.csv")
 EMAILS = os.path.join(PRIVATE, "emails.csv")
 PRIVACCTS = os.path.join(PRIVATE, "privaccts.csv")
@@ -34,20 +33,23 @@ CHECKS = os.path.join(PUBLIC, "checks.csv")
 PUBACCTS = os.path.join(PUBLIC, "pub-accounts.csv")
 BACKUPS = os.path.join(PUBLIC, "backups.csv")
 
-User = namedtuple("User", "SiteCookie Username Email")
-Name = namedtuple("Name", "Username SiteCookie")
-Email = namedtuple("Email", "Email SiteCookie Confirmed")
+User = namedtuple("User", "UserId Username Email")
+Cookie = namedtuple("Cookies", "Cookie UserId")
+Name = namedtuple("Name", "Username UserId")
+Email = namedtuple("Email", "Email UserId Confirmed")
 PrivAcct = namedtuple("PrivAcct", "UserIdCurrencyId Amount")
 Namespace = namedtuple("Namespace", "NamespaceName AuthorityUrl")
 Host = namedtuple("Host", "HostName Url SiteId")
 Currency = namedtuple("Currency", "CurrencyId Namespace Name Issuer Supply")
-AuthHash = namedtuple("AuthHash", "UserIdAuthN SaltNValue AuthHash")
+#AuthHash = None
+AuthHash = namedtuple("AuthHash", "UserId salt1 hash1 salt2 hash2 salt3 hash3 salt4 hash4 salt5 hash5 salt6 hash6 salt7 hash7 salt8 hash8 salt9 hash9 salt10 hash10")
 Check = namedtuple("Check", "CheckHash CurrencyId Amount")
 PubAcct = namedtuple("PubAcct", "AcctId AcctHash CurrencyId Balance")
 Backup = namedtuple("Backup", "TableName BackupVersion Datetime")
 
 
 users = Table(User, USERS)
+cookies = Table(Cookie, COOKIES)
 names = Table(Name, NAMES)
 emails = Table(Email, EMAILS)
 privaccts = Table(PrivAcct, PRIVACCTS)
@@ -66,6 +68,7 @@ def publishBackup(tablename):
  
 def saveAll():
     users.save()
+    cookies.save()
     names.save()
     emails.save()
     privaccts.save()
@@ -79,6 +82,7 @@ def saveAll():
 
 def loadAll():
     users.load()
+    cookies.load()
     names.load()
     emails.load()
     privaccts.load()

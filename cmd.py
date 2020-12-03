@@ -7,6 +7,7 @@ Command = namedtuple('Command', 'f help')
 promptline = "> "
 
 commands = {}
+DEBUG = True
 
 def evalLoop(before=None, after=None):
     try:
@@ -45,9 +46,11 @@ def runCommand(args):
         try:
             commands[name].f(args[1:])
         except Exception as e:
-            print(" Exception: ", e)
-            traceback.print_exc()
+            if DEBUG:
+                print(" Exception: ", e)
+                traceback.print_exc()
             print(" Command error or invalid arguments.")
+            commandHelp(name)
     else:
         print(" Unknown Command: '%s'" % name)
 
