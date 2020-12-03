@@ -4,8 +4,9 @@ from util import randstr
 from hash import hash
 from passwords import rare
 import data
+
 data.loadAll()
-data.saveAll()
+#data.saveAll()
 
 userid = None
 
@@ -39,10 +40,11 @@ def userSignup(args):
     # password is manually chosen, but site pre-cookie should be computed from hash(siteid + rootcookie)
     password = args[0]
     global userid
-    sitecookie = hash(password)
+    salt = randstr(SALTLEN)
+    passwordhash = hash(password)
     # always compute checks to prevent timing attacks,
     # that could guess if password is in use.
-    not_new = sitecookie in data.users
+    not_new = passwordhash in data.salts
     not_rare = not rare(password)
     if not_new or not_rare:
         print(SIGNUPFAIL)
@@ -65,12 +67,18 @@ def userSignup(args):
         email = args[2]
         if email in data.emails:
             print("Sorry, that email address is taken.")
+
+    sitecookie = hash(password + salt) # store this entire salt, because it is strictly private on the server.
+
     data.authhashes.addRow(*authHashes(userid, password, AUTHHASHES))
     data.authhashes.save()
-    data.cookies.addRow(sitecookie, userid)
+    data.cookies.addRow(sitecookie, userid, salt)
     data.cookies.save()
-    data.users.addRow(userid, username, email)
+    data.salts.addRow(passwordhash, salt)
+    data.salts.save()
+    data.users.addRow(userid, username, email, sitecookie)
     data.users.save()
+
     if len(username):
         data.names.addRow(username, userid)
         data.names.save()
@@ -78,8 +86,8 @@ def userSignup(args):
         data.emails.addRow(email, userid, False)
         data.emails.save()
     print(f" New user created.")
-    print(f" User Id: {userid}")
-    print(f" SiteCookie: '{sitecookie}'.")
+    print(f" User Id: '{userid}'")
+    print(f" SiteCookie: '{sitecookie}'")
     name = username
     if len(name) == 0:
         name = userid
@@ -89,17 +97,26 @@ def userSignup(args):
 
 def userLoginPassword(args):
     password = args[0]
-    cookie = hash(password)
-    userLoginCookie(cookie)
+    passwordhash = hash(password)
+    if not passwordhash in data.salts:
+        print("Unknown user password.")
+        return
+    salt = data.salts[passwordhash][1]
+    cookie = hash(password + salt)
+    # print("salt", salt)
+    # print("cookie", cookie)
+    userLoginCookie([cookie])
 
 def userLoginCookie(args):
     cookie = args[0]
-    if not cookie in data.cookies:
+    if not (cookie in data.cookies):
         print("Unknown user.")
+        # print("cookie: ", cookie)
+        # print("cookies: ", str(data.cookies))
         return
     global userid
     userid = data.cookies[cookie][1]
-    name = data.users[sitecookie][1]
+    name = data.users[userid][1]
     if len(name) == 0:
         name = userid
     setPrompt(f"{name} @ cookiejar> ")
@@ -107,17 +124,17 @@ def userLoginCookie(args):
 
 def whoami(args):
     global userid
-    if sitecookie == None:
+    if userid == None:
         print(" Not logged in.")
     else:
-        print(f" SiteCookie: {str(sitecookie)}")
         user = data.users[userid]
+        print(f" SiteCookie: '{user[3]}'")
         if len(user[1]):
-            print(" User Id: %s" % user[0])
+            print(f" User Id: '{user[0]}'")
         if len(user[1]):
-            print(" Username: %s" % user[1])
+            print(f" Username: '{user[1]}'")
         if len(user[2]):
-            print(" Email: %s" % user[2])
+            print(f" Email: '{user[2]}'")
 
 
 def userLogout(args):

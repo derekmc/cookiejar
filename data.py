@@ -6,7 +6,7 @@ from table import Table
 # TODO set update interval for all public files
 PUBLIC = "public"
 PRIVATE = "private"
-BACKUP = "backup" # this is the actual public folder for backups
+#PROTECTED = "protected"
 
 if not os.path.exists(PUBLIC):
     os.makedirs(PUBLIC)
@@ -14,27 +14,32 @@ if not os.path.exists(PUBLIC):
 if not os.path.exists(PRIVATE):
     os.makedirs(PRIVATE)
 
-if not os.path.exists(BACKUP):
-    os.makedirs(BACKUP)
+#if not os.path.exists(PROTECTED):
+#    os.makedirs(PROTECTED)
 
    
 # TODO handle claiming accounts
 
+# Private Tables
 USERS = os.path.join(PRIVATE, "users.csv")
 COOKIES = os.path.join(PRIVATE, "cookies.csv")
+SALTS = os.path.join(PRIVATE, "salts.csv")
 NAMES = os.path.join(PRIVATE, "names.csv")
 EMAILS = os.path.join(PRIVATE, "emails.csv")
 PRIVACCTS = os.path.join(PRIVATE, "privaccts.csv")
+
+# Public Tables
 NAMESPACES = os.path.join(PUBLIC, "namespaces.csv")
 HOSTS = os.path.join(PUBLIC, "hosts.csv")
 CURRENCIES = os.path.join(PUBLIC, "currencies.csv")
 AUTH_HASHES = os.path.join(PUBLIC, "auth-hashes.csv")
-CHECKS = os.path.join(PUBLIC, "checks.csv")
 PUBACCTS = os.path.join(PUBLIC, "pub-accounts.csv")
+CHECKS = os.path.join(PUBLIC, "checks.csv")
 BACKUPS = os.path.join(PUBLIC, "backups.csv")
 
-User = namedtuple("User", "UserId Username Email")
-Cookie = namedtuple("Cookies", "Cookie UserId")
+User = namedtuple("User", "UserId Username Email SiteCookie")
+Cookie = namedtuple("Cookies", "Cookie UserId Salt")
+Salt = namedtuple("Salts", "PasswordHash Salt")
 Name = namedtuple("Name", "Username UserId")
 Email = namedtuple("Email", "Email UserId Confirmed")
 PrivAcct = namedtuple("PrivAcct", "UserIdCurrencyId Amount")
@@ -50,6 +55,7 @@ Backup = namedtuple("Backup", "TableName BackupVersion Datetime")
 
 users = Table(User, USERS)
 cookies = Table(Cookie, COOKIES)
+salts = Table(Salt, SALTS)
 names = Table(Name, NAMES)
 emails = Table(Email, EMAILS)
 privaccts = Table(PrivAcct, PRIVACCTS)
@@ -69,6 +75,7 @@ def publishBackup(tablename):
 def saveAll():
     users.save()
     cookies.save()
+    salts.save()
     names.save()
     emails.save()
     privaccts.save()
@@ -83,6 +90,7 @@ def saveAll():
 def loadAll():
     users.load()
     cookies.load()
+    salts.load()
     names.load()
     emails.load()
     privaccts.load()
