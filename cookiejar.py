@@ -5,10 +5,16 @@ from hash import hash
 from passwords import rare
 import data
 
+# whether the service is multiplexed, allowing different users to share the same connection.
+MULTIUSER = False
+
+
 data.loadAll()
 #data.saveAll()
 
-userid = None
+#userid = None
+#sessionid = None
+sessions = {}  # sessid -> userid
 
 # Please see README.md for definitions on all the hashes and cookies, how they are computed, etc.
 
@@ -35,11 +41,15 @@ def authHashes(userid, password, n):
         result.append(authhash)
     return result
     
-def userSignup(args):
+def userSignup(args, sessid=0):
     # password or site-precookie
     # password is manually chosen, but site pre-cookie should be computed from hash(siteid + rootcookie)
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
+
     password = args[0]
-    global userid
+    global sessions
+    # global userid
     salt = randstr(SALTLEN)
     passwordhash = hash(password)
     # always compute checks to prevent timing attacks,
@@ -91,11 +101,13 @@ def userSignup(args):
     name = username
     if len(name) == 0:
         name = userid
-    setPrompt(f"{name} @ cookiejar> ")
+    # setPrompt(f"{name} @ cookiejar> ")
 
 
 
-def userLoginPassword(args):
+def userLoginPassword(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     password = args[0]
     passwordhash = hash(password)
     if not passwordhash in data.salts:
@@ -107,7 +119,9 @@ def userLoginPassword(args):
     # print("cookie", cookie)
     userLoginCookie([cookie])
 
-def userLoginCookie(args):
+def userLoginCookie(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     cookie = args[0]
     if not (cookie in data.cookies):
         print("Unknown user.")
@@ -115,16 +129,18 @@ def userLoginCookie(args):
         # print("cookies: ", str(data.cookies))
         return
     global userid
-    userid = data.cookies[cookie][1]
+    # userid = data.cookies[cookie][1]
     name = data.users[userid][1]
     if len(name) == 0:
         name = userid
-    setPrompt(f"{name} @ cookiejar> ")
+    if not MULTIPLEXED:
+        setPrompt(f"{name} @ cookiejar> ")
 
 
-def whoami(args):
-    global userid
-    if userid == None:
+def whoami(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
+    if userid == 0:
         print(" Not logged in.")
     else:
         user = data.users[userid]
@@ -137,14 +153,19 @@ def whoami(args):
             print(f" Email: '{user[2]}'")
 
 
-def userLogout(args):
+def userLogout(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     global userid
     userid = None
     print(" User logged out.")
-    setPrompt("cookiejar> ")
+    if not MULTIPLEXED:
+        setPrompt("cookiejar> ")
     
 
-def mintCoin(args):
+def mintCoin(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     # anonymously issued coins are all deposited into a bearer check.
     name = args[0]
     supply = int(args[1])
@@ -154,61 +175,95 @@ def mintCoin(args):
     if locked:
         pass #TODO give check
 
-def showMessages():
+def showMessages(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
 
-def connectPeer():
+def connectPeer(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
         
-def disconnectPeer():
+def disconnectPeer(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
 
-def acceptPeer():
+def acceptPeer(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
     
         
-def payPeer():
+def payPeer(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
         
-def invoicePeer():
+def invoicePeer(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
         
 
 # TODO none of these commands should run until the user has specified their cookie.
-def issueCurrency(args):
+def issueCurrency(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
 
 # Issues a new check
-def createCheck(args):
+def createCheck(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
 
 # Accept a check
-def acceptCheck(args):
+def acceptCheck(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
 
-def splitCheck(args):
+def splitCheck(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
 
-def joinCheck(args):
+def joinCheck(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
     
-def showSupply(args):
+def showSupply(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
 
-def showAccount(args):
+def showAccount(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
 
 # returns the anonymized backup for all data.
-def backupData(args):
+def backupData(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
 
-def showSiteId(args):
+def showSiteId(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
 
-def setUserCookie(args):
+def setUserCookie(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
 
-def claimBackup(args):
+def claimBackup(args, sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ArgumentError("Multiuser not enabled, sessid > 0 not allowed.")
     print("TODO")
 
 if __name__ == "__main__":
