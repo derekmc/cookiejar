@@ -15,9 +15,11 @@ MULTIUSER = True
 data.loadAll()
 #data.saveAll()
 
-#userid = None
+__userid = None # only use this if MULTIUSER is False
 #sessionid = None
-sessions = {}  # sessid -> userid
+# Sessions do no persist when this is restarted, only data.py csv tables persist.
+__sessions = {}  # sessid -> userid
+
 
 # Please see README.md for definitions on all the hashes and cookies, how they are computed, etc.
 
@@ -31,6 +33,19 @@ SALTSECRET = 5
 IDLEN = 10
 AUTHHASHES = 10
 SIGNUPFAIL = "Sorry, that password is not rare enough!"
+
+    
+def getUser(sessid=0):
+    if not MULTIUSER and sessid > 0:
+        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    if MULTIUSER:
+        if sessid == 0:
+            return None
+        global __sessions
+        return __sessions.get(sessid)
+    else:
+        return __userid
+ 
 # TODO use password dictionary
 def authHashes(userid, password, n):
     result = []
@@ -51,7 +66,6 @@ def userSignup(args, sessid=0):
         raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
 
     password = args[0]
-    global sessions
     # global userid
     salt = randstr(SALTLEN)
     passwordhash = hash(password)
@@ -120,7 +134,7 @@ def userLoginPassword(args, sessid=0):
     cookie = hash(password + salt)
     # print("salt", salt)
     # print("cookie", cookie)
-    userLoginCookie([cookie])
+    userLoginCookie([cookie], sessid)
 
 def userLoginCookie(args, sessid=0):
     if not MULTIUSER and sessid > 0:
@@ -131,24 +145,31 @@ def userLoginCookie(args, sessid=0):
         # print("cookie: ", cookie)
         # print("cookies: ", str(data.cookies))
         return
-    global userid
-    # userid = data.cookies[cookie][1]
+    userid = data.cookies[cookie][1]
     name = data.users[userid][1]
     if len(name) == 0:
         name = userid
-    if not MULTIPLEXED:
+
+    if MULTIUSER:
+        if sessid == 0:
+            raise ValueError("Multiuser is enabled, and this action requires a non-zero sessid.")
+        global __sessions
+        __sessions[sessid] = userid
+    else:
+        global __userid
+        __userid = userid
         setPrompt(f"{name} @ cookiejar> ")
 
 
 def whoami(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
-    if userid == 0:
+    userid = getUser(sessid)
+        
+    if userid == None:
         print(" Not logged in.")
     else:
         user = data.users[userid]
         print(f" SiteCookie: '{user[3]}'")
-        if len(user[1]):
+        if len(user[0]):
             print(f" User Id: '{user[0]}'")
         if len(user[1]):
             print(f" Username: '{user[1]}'")
@@ -159,22 +180,36 @@ def whoami(args, sessid=0):
 def userLogout(args, sessid=0):
     if not MULTIUSER and sessid > 0:
         raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
-    global userid
-    userid = None
-    print(" User logged out.")
-    if not MULTIPLEXED:
+
+    if MULTIUSER:
+        if sessid == 0:
+            raise ValueError("Multiuser is enabled, and this action requires a non-zero sessid.")
+
+        global __sessions
+        if not (sessid in __sessions):
+            print(" Not logged in.")
+            return
+            
+        del __sessions[sessid]
+    else:
+        global __userid
         setPrompt("cookiejar> ")
-    
+        __userid = None
+
+    print(" User logged out.")
+   
 
 def mintCoin(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
+    if userid == None:
+        raise ValueError("Not logged in.")
+
     # anonymously issued coins are all deposited into a bearer check.
     name = args[0]
     supply = int(args[1])
-    issuer = current_user
+    issuer = user
     locked = false if issuer >= 0 else true # anonymously created currencies must be locked.
-    n = setitem(['coin', name, supply, locked])
+    #data
     if locked:
         pass #TODO give check
 
