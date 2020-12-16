@@ -4,9 +4,9 @@ mkdir archive
 mv public/ archive/
 mv private/ archive/
 
-python cookiejar.py << EOF > /tmp/cookiejar-testfile
+script -c "python cookiejar.py" /tmp/testoutput.log << EOF
  1 signup peanutnutter carver
  1 login peanutnutter
 EOF
 
-cat /tmp/cookiejar-testfile
+cat /tmp/testoutput.log
