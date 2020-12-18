@@ -19,7 +19,10 @@ DEBUG = True
 # commands under their account.
 # 
 # Sessions are multiplexed by an interemediate service.  For example, a web server
-# may take web requests, and using cookies, identify which server
+# may take web requests, and using cookies, identify which client made that request
+# and assign those actions to a particular session.  This way, the service does not
+# need to directly process cookies and other meta information, and yet users cannot
+# directly dictate what session they are running.
 #
 # The command framework does not assign the session ids, but rather uses whatever number
 # the intermediate service stipulates to identify sessions.  It makes sense to keep
@@ -72,6 +75,8 @@ def isNonNegativeInteger(s):
 
 def runCommand(args):
     sessid = 0
+    if len(args) == 0:
+        return
     if isNonNegativeInteger(args[0]):
         sessid = int(args[0])
         args = args[1:]

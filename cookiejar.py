@@ -40,9 +40,12 @@ def getUser(sessid=0):
         raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
     if MULTIUSER:
         if sessid == 0:
-            return None
+            raise ValueError("No user session.")
         global __sessions
-        return __sessions.get(sessid)
+        userid = __sessions.get(sessid)
+        if userid == None:
+            raise ValueError("Not logged in.")
+        return userid
     else:
         return __userid
  
@@ -178,18 +181,9 @@ def whoami(args, sessid=0):
 
 
 def userLogout(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
 
     if MULTIUSER:
-        if sessid == 0:
-            raise ValueError("Multiuser is enabled, and this action requires a non-zero sessid.")
-
-        global __sessions
-        if not (sessid in __sessions):
-            print(" Not logged in.")
-            return
-            
         del __sessions[sessid]
     else:
         global __userid
@@ -201,8 +195,6 @@ def userLogout(args, sessid=0):
 
 def mintCoin(args, sessid=0):
     userid = getUser(sessid)
-    if userid == None:
-        raise ValueError("Not logged in.")
 
     # anonymously issued coins are all deposited into a bearer check.
     name = args[0]
@@ -214,94 +206,77 @@ def mintCoin(args, sessid=0):
         pass #TODO give check
 
 def showMessages(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
 
 def connectPeer(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
         
 def disconnectPeer(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
 
 def acceptPeer(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
     
         
 def payPeer(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
         
 def invoicePeer(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
         
 
 # TODO none of these commands should run until the user has specified their cookie.
 def issueCurrency(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
 
 # Issues a new check
 def createCheck(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
 
 # Accept a check
 def acceptCheck(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
 
 def splitCheck(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
 
 def joinCheck(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
     
 def showSupply(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
 
 def showAccount(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
 
 # returns the anonymized backup for all data.
 def backupData(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    # userid = getUser(sessid)
     print("TODO")
 
 def showSiteId(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
 
 def setUserCookie(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
 
 def claimBackup(args, sessid=0):
-    if not MULTIUSER and sessid > 0:
-        raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
+    userid = getUser(sessid)
     print("TODO")
 
 if __name__ == "__main__":
