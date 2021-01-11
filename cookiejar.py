@@ -1,6 +1,4 @@
-
-# load 
-from util import randstr
+# load from util import randstr
 from hash import hash
 from passwords import rare
 import data
@@ -13,7 +11,7 @@ MULTIUSER = True
 
 
 data.loadAll()
-#data.saveAll()
+data.saveAll()
 
 __userid = None # only use this if MULTIUSER is False
 #sessionid = None
@@ -268,8 +266,11 @@ def backupData(args, sessid=0):
     print("TODO")
 
 def showSiteId(args, sessid=0):
-    userid = getUser(sessid)
-    print("TODO")
+    #userid = getUser(sessid)
+    host = data.host
+    hostname = list(host.keys())[0]
+    siteid = host[hostname].SiteId
+    print(" Site Id: %s" % siteid)
 
 def setUserCookie(args, sessid=0):
     userid = getUser(sessid)

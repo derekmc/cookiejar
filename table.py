@@ -11,6 +11,9 @@ class Table:
         self.filename = filename
         pass
 
+    def keys(self):
+        return self.rows.keys()
+
     def __contains__(self, key):
         return key in self.rows
 

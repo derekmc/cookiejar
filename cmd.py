@@ -8,6 +8,7 @@ promptline = "> "
 
 commands = {}
 DEBUG = True
+#DEBUG = False
 
 #
 # User "Sessions" can be "multiplexed" into a single stream.
