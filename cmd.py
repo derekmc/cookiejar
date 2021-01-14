@@ -1,9 +1,14 @@
 
+# if a command is invoked without any arguments, all arguments are
+# prompted to the user one at a time, and any may be left blank.
+# if a command is invoked with at least one argument, there are
+# no prompts.
+
 from collections import namedtuple
 import traceback
 #import file
 
-Command = namedtuple('Command', 'f help')
+Command = namedtuple('Command', 'f args help')
 promptline = "> "
 
 commands = {}
@@ -60,8 +65,13 @@ def evalLoop(before=None, after=None):
     # print("What is your name?")
     # print("Hello, " + input() + ".")
 
-def addCommand(name, f, helpstr):
-    commands[name] = Command(f, helpstr)
+def addCommand(cmd, f, helpstr):
+    args = cmd.split()
+    if len(args) < 1:
+        raise ValueError("addCommand: no command given")
+    name = args[0]
+    args = args[1:]
+    commands[name] = Command(f, args, helpstr)
 
 def setPrompt(s):
     global promptline
@@ -74,8 +84,10 @@ def isNonNegativeInteger(s):
     except ValueError:
         return False
 
+# preserve sessid, until it is unset.
+sessid = 0
 def runCommand(args):
-    sessid = 0
+    global sessid
     if len(args) == 0:
         return
     if isNonNegativeInteger(args[0]):
@@ -91,7 +103,20 @@ def runCommand(args):
             print(" Type 'help (command)' to get more information about a command.")
     elif cmdname in commands:
         try:
-            commands[cmdname].f(args[1:], sessid=sessid)
+            cmd = commands[cmdname]
+            cmdargs = cmd.args
+            Arguments = namedtuple('Arguments', cmdargs)
+            arglist = [None] * len(cmdargs)
+            if len(cmdargs) > 0 and len(args) == 1:
+                # prompt for each argument.
+                for i, argname in enumerate(cmdargs):
+                    print(argname + ": ", end="")
+                    arglist[i] = input().strip()
+            else:
+                for i in range(min(len(cmdargs), len(args) - 1)):
+                    arglist[i] = args[i+1]
+            namedargs = Arguments(*arglist)
+            commands[cmdname].f(namedargs, sessid=sessid)
         except Exception as e:
             if DEBUG:
                 print(" Exception: ", e)
@@ -108,15 +133,17 @@ def commandHelp(name):
             print(name, end=", ")
         print()
     elif name in commands:
-        print(" %s: %s" % (name, commands[name].help))
+        command = commands[name]
+        print(" %s: %s\n %s" % (name, (" ").join(command.args), command.help))
     else:
         print(" Unknown Command: '%s'" % name)
 
 if __name__ == "__main__":
-    def greet(args):
-        name = "there"
+    def greet(args, sessid=0):
+        name = args.name or "there"
         if len(args) > 0:
             name = args[0]
         print("Hello, %s." % name)
-    addCommand("greet", greet, "greet [person] - Say a greeting")
+    addCommand("greet name", greet, "Greet someone")
     evalLoop()
+

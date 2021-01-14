@@ -1,4 +1,5 @@
-# load from util import randstr
+# load
+from util import randstr
 from hash import hash
 from passwords import rare
 import data
@@ -276,6 +277,18 @@ def setUserCookie(args, sessid=0):
     userid = getUser(sessid)
     print("TODO")
 
+def connectContractor(args, sessid=0):
+    userid = getUser(sessid)
+    print("TODO")
+
+def connectClientPeer(args, sessid=0):
+    userid = getUser(sessid)
+    print("TODO")
+
+def listTransactions(args, sessid=0):
+    userid = getUser(sessid)
+    print("TODO")
+
 def claimBackup(args, sessid=0):
     userid = getUser(sessid)
     print("TODO")
@@ -292,7 +305,7 @@ if __name__ == "__main__":
         ["logout", userLogout, "logout"],
         ["mint", mintCoin, "mint (name) [supply] - mints an amount of a coin if possible (ie you are the issuer and it is not locked)."],
         ["contractor", connectContractor, "contractor (peer) - contractors can invoice you."],
-        ["client", connectClient, "client (peer) - clients can pay you."],
+        ["client", connectClientPeer, "client (peer) - clients can pay you."],
         ["disconnect", disconnectPeer, "disconnect (peer)"],
         ["transactions", listTransactions, "transactions - list pending transactions, invoices and unreceived payments."],
         # TODO: do we want to allow arbitrary messaging? ["say", speakPeer, "say (peer) (message)"],
