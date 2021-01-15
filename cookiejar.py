@@ -216,7 +216,7 @@ def mintCoin(args, sessid=0):
     userid = getUser(sessid)
 
     # anonymously issued coins are all deposited into a bearer check.
-    name = args.name
+    name = args.coinname
     supply = int(args.supply)
     issuer = user
     locked = false if issuer >= 0 else true # anonymously created currencies must be locked.
@@ -309,6 +309,15 @@ def claimBackup(args, sessid=0):
     userid = getUser(sessid)
     print("TODO")
 
+# whenver history is enabled, this fact is reminded to the user after they login and after every command.
+def enableHistory(args, sessid=0):
+    print("TODO")
+
+# clears the users transaction history and disables recording history.
+def disableHistory(args, sessid=0):
+    print("TODO")
+    
+
 if __name__ == "__main__":
     commands = [
         ["id", showSiteId, "show the 'Site Id' which serves as a salt for generating the 'user cookie' and other data."],
@@ -323,14 +332,14 @@ if __name__ == "__main__":
         ["messages", showMessages, "mssages - show messages, such as peer connect requests, payment or invoice requests, cashed check notifications."],
         ["logout", userLogout, "logout"],
         ["mint coinname supply", mintCoin, "mints an amount of a coin if possible (ie you are the issuer and it is not locked)."],
-        #["contractor", connectContractor, "contractor (peer) - contractors can invoice you."],
-        #["client", connectClientPeer, "client (peer) - clients can pay you."],
-        #["disconnect", disconnectPeer, "disconnect (peer)"],
+        #["contractor peername", connectContractor, "connect to a contractor so they can invoice you."],
+        #["client peername", connectClientPeer, "connect to a client peer so they can pay you."],
+        #["disconnect peername", disconnectPeer, "disconnect from a peer"],
         #["transactions", listTransactions, "transactions - list pending transactions, invoices and unreceived payments."],
         ## TODO: do we want to allow arbitrary messaging? ["say", speakPeer, "say (peer) (message)"],
         ## no rejecting ["reject", rejectPeer, "reject (peer) [invoice] - reject an outstanding"],
-        #["pay", payPeer, "pay (peer) (currency) (amount) [message]"],
-        #["invoice", invoicePeer, "invoice (peer) (currency) (amount) [message]"],
+        #["pay peername", payPeer, "pay (peer) (currency) (amount) [message]"],
+        #["invoice peername", invoicePeer, "invoice (peer) (currency) (amount) [message]"],
         #["check", createCheck, "check (name) (amount) [message] -> checkid. Creates a check for amount specified."],
         #["accept", acceptCheck, "accept (checkid) | accept (transactionid)"],
         #["split", splitCheck, "split (checkid) (amount...) - Split a check into n smaller checks."],
