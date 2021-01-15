@@ -1,4 +1,5 @@
 # load
+from collections import namedtuple
 from util import randstr
 from hash import hash
 from passwords import rare
@@ -8,6 +9,7 @@ import data
 # allowing different actions from different users to be invoked over the same connection,
 # the user session is indicated with a "sessid", an integer that comes before the command.
 # 0 is always a guest session / publicly available calls.
+ALLOWUSERPASSWORDS = False
 MULTIUSER = True
 
 
@@ -28,6 +30,7 @@ SALTLEN = 5
 # Salts are secret, in order to make cracking user passwords more difficult.
 # To provide the authhashes, a user must randomly guess the salts, so don't make this too long, but also not too short either.
 SALTSECRET = 5
+AUTOPASSLEN = 20
 
 IDLEN = 10
 AUTHHASHES = 10
@@ -39,11 +42,11 @@ def getUser(sessid=0):
         raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
     if MULTIUSER:
         if sessid == 0:
-            raise ValueError("No user session.")
+            return None
         global __sessions
         userid = __sessions.get(sessid)
         if userid == None:
-            raise ValueError("Not logged in.")
+            return None
         return userid
     else:
         return __userid
@@ -61,13 +64,28 @@ def authHashes(userid, password, n):
         result.append(authhash)
     return result
     
+def autoSignup(args, sessid=0):
+    password = randstr(AUTOPASSLEN)
+    passwordhash = hash(password)
+    while(passwordhash in data.salts): #theoretically this could infinite loop, but when are we gonna have that many users?
+        password = randstr(AUTOPASSLEN)
+        passwordhash = hash(password)
+    SignupArguments = namedtuple('Arguments', "username password email")
+    signupargs = SignupArguments(args.username, password, args.email)
+    userSignup(signupargs, sessid)
+    print(" Password: " + password)
+
+def forbidManualSignup(args, sessid=0):
+    print(" Manual password selection disabled. Use 'autosignup' instead.")
+    return
+
 def userSignup(args, sessid=0):
     # password or site-precookie
     # password is manually chosen, but site pre-cookie should be computed from hash(siteid + rootcookie)
     if not MULTIUSER and sessid > 0:
         raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
 
-    password = args[0]
+    password = args.password
     # global userid
     salt = randstr(SALTLEN)
     passwordhash = hash(password)
@@ -78,24 +96,20 @@ def userSignup(args, sessid=0):
     if not_new or not_rare:
         print(SIGNUPFAIL)
         return
-    username = ""
-    email = ""
+
     userid = randstr(IDLEN)
     while(userid in data.users): #theoretically this could infinite loop, but when are we gonna have that many users?
         userid = randstr(IDLEN)
 
-    if len(args) > 3:
-        print("Sorry, 'signup' accepts at most 3 arguments (password) [username] [email]")
+    username = args.username or ""
+    email = args.email or ""
+
+    if username in data.names:
+        print("Sorry, that username is taken.")
         return
-    if len(args) > 1:
-        username = args[1]
-        if username in data.names:
-            print("Sorry, that username is taken.")
-            return
-    if len(args) > 2:
-        email = args[2]
-        if email in data.emails:
-            print("Sorry, that email address is taken.")
+
+    if email in data.emails:
+        print("Sorry, that email address is taken.")
 
     sitecookie = hash(password + salt) # store this entire salt, because it is strictly private on the server.
 
@@ -111,12 +125,15 @@ def userSignup(args, sessid=0):
     if len(username):
         data.names.addRow(username, userid)
         data.names.save()
+
     if len(email):
         data.emails.addRow(email, userid, False)
         data.emails.save()
+
     print(f" New user created.")
     print(f" User Id: '{userid}'")
     print(f" SiteCookie: '{sitecookie}'")
+
     name = username
     if len(name) == 0:
         name = userid
@@ -127,7 +144,7 @@ def userSignup(args, sessid=0):
 def userLoginPassword(args, sessid=0):
     if not MULTIUSER and sessid > 0:
         raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
-    password = args[0]
+    password = args.password
     passwordhash = hash(password)
     if not passwordhash in data.salts:
         print("Unknown user password.")
@@ -136,12 +153,14 @@ def userLoginPassword(args, sessid=0):
     cookie = hash(password + salt)
     # print("salt", salt)
     # print("cookie", cookie)
-    userLoginCookie([cookie], sessid)
+    CookieArguments = namedtuple('Arguments', "cookie")
+    cookieargs = CookieArguments(cookie)
+    userLoginCookie(cookieargs, sessid)
 
 def userLoginCookie(args, sessid=0):
     if not MULTIUSER and sessid > 0:
         raise ValueError("Multiuser not enabled, sessid > 0 not allowed.")
-    cookie = args[0]
+    cookie = args.cookie
     if not (cookie in data.cookies):
         print("Unknown user.")
         # print("cookie: ", cookie)
@@ -165,6 +184,7 @@ def userLoginCookie(args, sessid=0):
 
 def whoami(args, sessid=0):
     userid = getUser(sessid)
+        
         
     if userid == None:
         print(" Not logged in.")
@@ -196,8 +216,8 @@ def mintCoin(args, sessid=0):
     userid = getUser(sessid)
 
     # anonymously issued coins are all deposited into a bearer check.
-    name = args[0]
-    supply = int(args[1])
+    name = args.name
+    supply = int(args.supply)
     issuer = user
     locked = false if issuer >= 0 else true # anonymously created currencies must be locked.
     #data
@@ -273,10 +293,6 @@ def showSiteId(args, sessid=0):
     siteid = host[hostname].SiteId
     print(" Site Id: %s" % siteid)
 
-def setUserCookie(args, sessid=0):
-    userid = getUser(sessid)
-    print("TODO")
-
 def connectContractor(args, sessid=0):
     userid = getUser(sessid)
     print("TODO")
@@ -296,14 +312,17 @@ def claimBackup(args, sessid=0):
 if __name__ == "__main__":
     commands = [
         ["id", showSiteId, "show the 'Site Id' which serves as a salt for generating the 'user cookie' and other data."],
-        #["signup", userSignup, "signup (password) [username] [email]\n Note: password must be unique and cannot be changed."],
-        #["whoami", whoami, "whoami - displays info on the logged in user."],
-        #["cookie", setUserCookie, "cookie (cookie) - sets the \"User Cookie\" which should be generated from a \"User Secret\"\n UserCookie = hash(UserSecret + siteId)"],
-        #["login", userLoginPassword, "login (password) - Log in using your password (recommended to use cookie instead)."],
-        #["cookie", userLoginCookie, "cookie (cookie) - Log in using your cookie."],
-        #["messages", showMessages, "mssages - show messages, such as peer connect requests, payment or invoice requests, cashed check notifications."],
-        #["logout", userLogout, "logout"],
-        #["mint", mintCoin, "mint (name) [supply] - mints an amount of a coin if possible (ie you are the issuer and it is not locked)."],
+        ["autosignup username email", autoSignup, "Signup with an autogenerated password."],
+        ["signup username password email" if ALLOWUSERPASSWORDS else "signup",
+           userSignup if ALLOWUSERPASSWORDS else forbidManualSignup,
+           "Create an account. Note: password must be unique and cannot be changed."],
+        ["autosignup username email", autoSignup, "Create an account. Automatically generate the password."],
+        ["whoami", whoami, "display info on the logged in user."],
+        ["cookie cookie", userLoginCookie, "Login using your cookie."],
+        ["login password", userLoginPassword, "Login using your password (recommended to use cookie instead)."],
+        ["messages", showMessages, "mssages - show messages, such as peer connect requests, payment or invoice requests, cashed check notifications."],
+        ["logout", userLogout, "logout"],
+        ["mint coinname supply", mintCoin, "mints an amount of a coin if possible (ie you are the issuer and it is not locked)."],
         #["contractor", connectContractor, "contractor (peer) - contractors can invoice you."],
         #["client", connectClientPeer, "client (peer) - clients can pay you."],
         #["disconnect", disconnectPeer, "disconnect (peer)"],

@@ -94,6 +94,9 @@ def runCommand(args):
         sessid = int(args[0])
         args = args[1:]
 
+    if len(args) == 0:
+        return
+
     cmdname = args[0]
     if cmdname == "help":
         if len(args) > 1:
