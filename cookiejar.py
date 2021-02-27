@@ -11,6 +11,7 @@ import data
 # 0 is always a guest session / publicly available calls.
 ALLOWUSERPASSWORDS = False
 MULTIUSER = True
+NAMESPACE = "TESTNAMESPACE"
 
 
 data.loadAll()
@@ -218,11 +219,23 @@ def mintCoin(args, sessid=0):
     # anonymously issued coins are all deposited into a bearer check.
     name = args.coinname
     supply = int(args.supply)
-    issuer = user
+    issuer = userid
+    currencyid = randstr(IDLEN)
+    while(currencyid in data.currencies): #theoretically this could infinite loop, but when are we gonna have that many users?
+        currencyid = randstr(IDLEN)
+
     locked = false if issuer >= 0 else true # anonymously created currencies must be locked.
     #data
     if locked:
         pass #TODO give check
+    
+    data.currencies.addRow(currencyid, NAMESPACE, name, issuer, supply, locked)
+    data.privaccts.addRow(userid + ":" + currencyid, supply)
+    # TODO obfuscate pubaccts
+
+    # compute pubacct info
+    backup_secret = hash(userid +
+    data.pubaccts.addRow( )
 
 def showMessages(args, sessid=0):
     userid = getUser(sessid)

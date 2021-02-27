@@ -126,11 +126,19 @@ besides the one time pad, ie some constructable solution for P = NP is found.
  * site-temp-cookie : an independently generated cookie token, so that clients don't have to send their site-cookie to the host every time.
  * auth-cookie-_n : h(site-cookie-pre + salt-n) -- the host generates these using site-pre-cookie, but does not store either.
  * auth-hash-_n : h(auth-cookie-_n)  -- the host both stores and shares these, along with all salt-_n's so that sites can authenticate account claims.
- * backup-secret : h(backup-version-id + site-post-cookie) -- the primary token used to claim accounts.
+
+#### TODO no more "backup version" data used in hashes.
+#### instead, every account has a non-linear account version to prevent replay attacks.
+ * backup-secret : h(acct-id + site-post-cookie) -- the primary token used to claim accounts.
  * backup-hash : h(backup-secret) -> user-hash -- the backup hash is linked to a specific user by linking it to a user-hash.
  * user-hash : h(backup-version + backup-secret + user-id) -- this is used to link all backuped up accounts to a given user,
                                                            without being able to trace that link until the user claims their accounts using the backup-secret.
- * acct-hash : h(acct-id + backup-secret) -- the publicly shared token associated with every account.
+
+### Note: acct-id are slots which may correspond to different users over time, if accounts are obfuscated.
+### So in one release, an account may correspond to one user(with the right site-post-cookie), while in another release, it may correspond to another user.
+ * acct-id : unique identifier for the account.  When pubaccounts are obfuscated, this is a slot only, and users balances may be moved between one or multiple slots.
+ * acct-version : a randomly generated version code, must be unique per acct-id at least.
+ * acct-hash : h(acct-id + acct-version + site-post-cookie) -- the publicly shared token associated with every account.
  * acct:  <acct-id, acct-hash, currency-descriptor(including prime host and scope), balance>
 
 To claim an account, or cross authenticate, the user must reveal the following to "new-host":

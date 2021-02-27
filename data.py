@@ -43,14 +43,17 @@ Cookie = namedtuple("Cookies", "Cookie UserId Salt")
 Salt = namedtuple("Salts", "PasswordHash Salt")
 Name = namedtuple("Name", "Username UserId")
 Email = namedtuple("Email", "Email UserId Confirmed")
-PrivAcct = namedtuple("PrivAcct", "UserIdCurrencyId Amount")
+
+# all the accounts 
+PrivAcct = namedtuple("PrivAcct", "UserId:CurrencyId AcctId AcctVersionId")
 Namespace = namedtuple("Namespace", "NamespaceName AuthorityUrl")
 Host = namedtuple("Host", "HostName Url SiteId")
-Currency = namedtuple("Currency", "CurrencyId Namespace Name Issuer Supply")
+Currency = namedtuple("Currency", "CurrencyId Namespace Name Issuer Supply Locked")
 #AuthHash = None
 AuthHash = namedtuple("AuthHash", "UserId salt1 hash1 salt2 hash2 salt3 hash3 salt4 hash4 salt5 hash5 salt6 hash6 salt7 hash7 salt8 hash8 salt9 hash9 salt10 hash10")
 Check = namedtuple("Check", "CheckHash CurrencyId Amount")
-PubAcct = namedtuple("PubAcct", "AcctId AcctHash CurrencyId Balance")
+# once an account is used, it is marked as expired.
+PubAcct = namedtuple("PubAcct", "AcctId AcctVersionId AcctHash CurrencyId Balance Expired")
 Backup = namedtuple("Backup", "TableName BackupVersion Datetime")
 
 
