@@ -34,6 +34,29 @@ to introduce vulnerabilities, and not adapt well to changing needs.
 While it would be possible to establish a fixed protocol for replacing hosts, this is not recommended.  The best way,
 is for someone to simply startup the replacement service, and prove themselves reliable over time.
 
+# Reduced security infrastructure for implementers
+
+One of the principal advantage of cookiejar, is because it simply uses standard security infastructure for the
+web, it is much easier to create tools and APIs.  So tools do not have to handle things like public key
+cryptography directly, they can simply rely on SSL for secure connections to a specific service provider.
+
+This makes it easier to design, publish, update and maintain tools that interact with cookiejar.
+
+Obviously, the drawback is that cookie jar is not fully distributed, and if a service provider needs to be
+replaced, there may be uncertainty about who should replace them, and whether they can be trusted as a host,
+both for service and data integrity, and uptime reliability.  The benefit is significantly reduced transaction
+costs, improved speed and clearance, a diverse community of service providers and associated value networks.
+
+Traditional banking relies on a similar model, in that banks service a specific set of customers,
+often in a specific locale, and can interface with specific legal, cultural and investment needs.
+
+Cookiejar is not well suited for high finance, but for small web-based projects like donations,
+game currencies, etc. it can potentially be useful.  It is fast, easy to use, and easy to
+adapt to your project needs. Most importantly, the host is intentionally replaceable, and they
+make all the data necessary to replace them, ie anonymized user account and active check
+information, available.
+
+
 
 # Prototype Implementation
 
