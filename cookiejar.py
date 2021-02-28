@@ -11,7 +11,7 @@ import data
 # 0 is always a guest session / publicly available calls.
 ALLOWUSERPASSWORDS = False
 MULTIUSER = True
-NAMESPACE = "TESTNAMESPACE"
+NAMESPACE = "test"
 
 
 data.loadAll()
@@ -31,7 +31,7 @@ SALTLEN = 5
 # Salts are secret, in order to make cracking user passwords more difficult.
 # To provide the authhashes, a user must randomly guess the salts, so don't make this too long, but also not too short either.
 SALTSECRET = 5
-AUTOPASSLEN = 20
+AUTOPASSLEN = 23 
 
 IDLEN = 10
 AUTHHASHES = 10
@@ -95,7 +95,7 @@ def userSignup(args, sessid=0):
     not_new = passwordhash in data.salts
     not_rare = not rare(password)
     if not_new or not_rare:
-        print(SIGNUPFAIL)
+        raise ValueError(SIGNUPFAIL)
         return
 
     userid = randstr(IDLEN)
@@ -106,11 +106,11 @@ def userSignup(args, sessid=0):
     email = args.email or ""
 
     if username in data.names:
-        print("Sorry, that username is taken.")
+        raise ValueError("Sorry, that username is taken.")
         return
 
     if email in data.emails:
-        print("Sorry, that email address is taken.")
+        raise ValueError("Sorry, that email address is taken.")
 
     sitecookie = hash(password + salt) # store this entire salt, because it is strictly private on the server.
 
@@ -185,8 +185,6 @@ def userLoginCookie(args, sessid=0):
 
 def whoami(args, sessid=0):
     userid = getUser(sessid)
-        
-        
     if userid == None:
         print(" Not logged in.")
     else:
@@ -218,24 +216,58 @@ def mintCoin(args, sessid=0):
 
     # anonymously issued coins are all deposited into a bearer check.
     name = args.coinname
+    namespace = NAMESPACE
     supply = int(args.supply)
     issuer = userid
     currencyid = randstr(IDLEN)
     while(currencyid in data.currencies): #theoretically this could infinite loop, but when are we gonna have that many users?
         currencyid = randstr(IDLEN)
 
-    locked = false if issuer >= 0 else true # anonymously created currencies must be locked.
-    #data
-    if locked:
-        pass #TODO give check
-    
-    data.currencies.addRow(currencyid, NAMESPACE, name, issuer, supply, locked)
-    data.privaccts.addRow(userid + ":" + currencyid, supply)
-    # TODO obfuscate pubaccts
+    anonymous = (userid == None)
+    locked = True if anonymous else False # anonymously created currencies must be locked.
 
-    # compute pubacct info
-    backup_secret = hash(userid +
-    data.pubaccts.addRow( )
+    lookup = name + ":" + namespace
+    if lookup in data.currencylookup:
+        #TODO allow issuers to issue more.
+        raise ValueError("That currency already exists")
+    else:
+        data.currencies.addRow(currencyid, NAMESPACE, name, issuer, supply, locked)
+        data.currencylookup.addRow(lookup, currencyid)
+
+        if anonymous:
+            print("TODO: issue check for supply of anonymous currency.");
+            pass #TODO anonymously created currencies have all their balance put into one check.
+        else:
+            user = data.users[userid]
+            sitecookie = user[3]
+            sitepostcookie = hash(sitecookie)
+            # TODO obfuscate pubaccts
+            # compute pubacct info
+            acctid = randstr(IDLEN)
+            while(acctid in data.pubaccts): #theoretically this could infinite loop, but when are we gonna have that many users?
+                acctid = randstr(IDLEN)
+
+            acctversion = randstr(IDLEN)
+            # for when you update an account, do this.
+            # while(acctversion == data.pubaccts[acctid]): # it should be okay, if the account version conflicts with a previous version, as it exists primarily, to make it difficult to track a specific account history, as account versions exist primarily to mitigate against potential replay attacks.
+            #   acctversion = randstr(IDLEN)
+
+            data.privaccts.addRow(userid + ":" + currencyid, acctid)
+
+            acctsecret = hash(acctid + ":" + acctversion + ":" + sitepostcookie)
+            accthash = hash(acctid + ":" + userid + ":" + acctsecret)
+            data.pubaccts.addRow(acctid, acctversion, accthash, currencyid, supply)
+        print(f"Minted {supply} units of currency {lookup}")
+
+    data.pubaccts.save()
+    data.privaccts.save()
+    data.currencies.save()
+    data.currencylookup.save()
+
+def setNamespace(args, sessid=0):
+    global NAMESPACE
+    NAMESPACE = args.namespace
+    setPrompt(f"cookiejar @{NAMESPACE} > ")
 
 def showMessages(args, sessid=0):
     userid = getUser(sessid)
@@ -345,6 +377,7 @@ if __name__ == "__main__":
         ["messages", showMessages, "mssages - show messages, such as peer connect requests, payment or invoice requests, cashed check notifications."],
         ["logout", userLogout, "logout"],
         ["mint coinname supply", mintCoin, "mints an amount of a coin if possible (ie you are the issuer and it is not locked)."],
+        ["namespace namespace", setNamespace, "sets the global sitewide namespace, for all coins and currencies."]
         #["contractor peername", connectContractor, "connect to a contractor so they can invoice you."],
         #["client peername", connectClientPeer, "connect to a client peer so they can pay you."],
         #["disconnect peername", disconnectPeer, "disconnect from a peer"],
@@ -363,7 +396,9 @@ if __name__ == "__main__":
         #["claim", claimBackup, "claim backed up accounts"],
         # ["loadbackup", loadBackupData, "loads a backup into a new subspace"],
     ]
-    setPrompt("cookiejar> ")
+
+    setPrompt(f"cookiejar @{NAMESPACE} > ")
+
     for command in commands:
         addCommand(*command)
 

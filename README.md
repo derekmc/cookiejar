@@ -119,7 +119,7 @@ besides the one time pad, ie some constructable solution for P = NP is found.
  * site-id : the id of the site, which is used as a salt with the root-cookie.
  * salt-_n : Every auth-cookie requires a unique salt.
  * root-cookie : the primary secret token owned by the user, used to generate all other cookies in combination with various salts, etc.
- * site-pre-cookie : h(site-id + root-cookie) -- shared with 'host' only once, not stored permanently
+ * site-pre-cookie : h(site-id + root-cookie) -- shared with 'host' only once, not stored permanently, interchangeable with a password.
  * password : a manually chosen host specific alternative to pre-cookies
  * site-cookie : h(site-pre-cookie or password)
  * site-post-cookie : h(site-cookie) -- because the site-cookie should never be shared with other hosts, this token is used instead for generating backup-secrets.
@@ -136,21 +136,55 @@ besides the one time pad, ie some constructable solution for P = NP is found.
 
 ### Note: acct-id are slots which may correspond to different users over time, if accounts are obfuscated.
 ### So in one release, an account may correspond to one user(with the right site-post-cookie), while in another release, it may correspond to another user.
+### because the username (which is collated to a user id)
  * acct-id : unique identifier for the account.  When pubaccounts are obfuscated, this is a slot only, and users balances may be moved between one or multiple slots.
  * acct-version : a randomly generated version code, must be unique per acct-id at least.
- * acct-hash : h(acct-id + acct-version + site-post-cookie) -- the publicly shared token associated with every account.
+ * acct-secret : h(acct-id + acct-version + site-post-cookie)
+ * acct-hash : h(acct-id + userid + acct-secret) -- the publicly shared token associated with every account. userid is included, so that authhashes can be matched and verified.
  * acct:  <acct-id, acct-hash, currency-descriptor(including prime host and scope), balance>
 
+
 To claim an account, or cross authenticate, the user must reveal the following to "new-host":
- * user-id (on the original "host")
+ * user-id (on the original "host", in order to lookup the auth-hashes)
  * backup-secret 
  * auth-hash-(_n)
+
+Assuming a user only keeps track of their cookie or password,
+they will need to "re-discover" their userid.  This can
+be done by generating their auth-hashes, to rediscover their userid.
+Note that rainbow tables may be necessary to do this, as the
+salts for the auth-hashes are mostly secret, in order to make
+it more difficult for random attackers to attack a user's
+password.  A "forgotten salt" or "half-forgotten" salt,
+multiplies the effort required for both legitimate users and attackers.
+
+# TODO, successive authhashes should use more entropy.
+# Nevermind, that doesn't work, because this is a "weakest link" issue.
+# maybe, successive authhashes could use **less** entropy?
+# No, that also doesn't really work, because they have to be public
+# for recovery purposes. That would only make sense, with timed releases.
+# TODO, we should **definitely** have the option, for accounts
+# secured with a public key.  No, the entire purpose of this,
+# is to avoid that.  Public key based cryptos already exist, and
+# you can transfer stuff to one of those.
+# Cookie jar should really be for small amounts,
+# like video game currencies or starbucks cards, that you
+# spend or trade frequently, and might not mind losing.
+# Furthermore, you only potentially lose something,
+# if your auth-hashes get cracked, thereby discovering your
+# password, or if you are unable to claim an account on
+# a replacement host.
+
+This also makes it more difficult for actual users to discover
+the correct salt, as well as their user-id, if that information
+is no longer available from the original host.
+this means that the user's cookiejar-client, must use guess and check to 
+the correct auth-hash, and also which accounts they own.
 
 To claim accounts on a new service, ie cross-authenticate, a user must reveal the correct backup-secret to 'new-host',
 along with some "auth-cookie" and their user-id on the original host.
 Auth cookies is required, to prevent the case where a 'new-host' goes rogue, and attempts
 replay attacks.  In this case, the highest indexed auth
-
 
 
 # Cryptographic Apocalypse

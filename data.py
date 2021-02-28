@@ -20,19 +20,22 @@ if not os.path.exists(PRIVATE):
    
 # TODO handle claiming accounts
 
+# Protected Tables
+
 # Private Tables
-USERS = os.path.join(PRIVATE, "users.csv")
 COOKIES = os.path.join(PRIVATE, "cookies.csv")
 SALTS = os.path.join(PRIVATE, "salts.csv")
 NAMES = os.path.join(PRIVATE, "names.csv")
 EMAILS = os.path.join(PRIVATE, "emails.csv")
 PRIVACCTS = os.path.join(PRIVATE, "privaccts.csv")
+USERS = os.path.join(PRIVATE, "users.csv")
 
 # Public Tables
 NAMESPACES = os.path.join(PUBLIC, "namespaces.csv")
 HOST = os.path.join(PUBLIC, "host.csv")
 HOSTS = os.path.join(PUBLIC, "hosts.csv")
 CURRENCIES = os.path.join(PUBLIC, "currencies.csv")
+CURRENCYLOOKUP = os.path.join(PUBLIC, "currencylookup.csv")
 AUTH_HASHES = os.path.join(PUBLIC, "auth-hashes.csv")
 PUBACCTS = os.path.join(PUBLIC, "pub-accounts.csv")
 CHECKS = os.path.join(PUBLIC, "checks.csv")
@@ -45,17 +48,17 @@ Name = namedtuple("Name", "Username UserId")
 Email = namedtuple("Email", "Email UserId Confirmed")
 
 # all the accounts 
-PrivAcct = namedtuple("PrivAcct", "UserId:CurrencyId AcctId AcctVersionId")
+PrivAcct = namedtuple("PrivAcct", "UserId_CurrencyId AcctId")
 Namespace = namedtuple("Namespace", "NamespaceName AuthorityUrl")
 Host = namedtuple("Host", "HostName Url SiteId")
 Currency = namedtuple("Currency", "CurrencyId Namespace Name Issuer Supply Locked")
-#AuthHash = None
+CurrencyLookup = namedtuple("CurrencyLookup", "NameAtNamespace CurrencyId")
 AuthHash = namedtuple("AuthHash", "UserId salt1 hash1 salt2 hash2 salt3 hash3 salt4 hash4 salt5 hash5 salt6 hash6 salt7 hash7 salt8 hash8 salt9 hash9 salt10 hash10")
 Check = namedtuple("Check", "CheckHash CurrencyId Amount")
 # once an account is used, it is marked as expired.
-PubAcct = namedtuple("PubAcct", "AcctId AcctVersionId AcctHash CurrencyId Balance Expired")
-Backup = namedtuple("Backup", "TableName BackupVersion Datetime")
 
+PubAcct = namedtuple("PubAcct", "AcctId AcctVersion AcctHash CurrencyId Balance")
+Backup = namedtuple("Backup", "TableName BackupVersion Datetime")
 
 users = Table(User, USERS)
 cookies = Table(Cookie, COOKIES)
@@ -67,6 +70,7 @@ namespaces = Table(Namespace, NAMESPACES)
 host = Table(Host, HOST)
 hosts = Table(Host, HOSTS)
 currencies = Table(Currency, CURRENCIES)
+currencylookup = Table(CurrencyLookup, CURRENCYLOOKUP)
 authhashes = Table(AuthHash, AUTH_HASHES)
 checks = Table(Check, CHECKS)
 pubaccts = Table(PubAcct, PUBACCTS)
@@ -88,6 +92,7 @@ def saveAll():
     host.save()
     hosts.save()
     currencies.save()
+    currencylookup.save()
     authhashes.save()
     checks.save()
     pubaccts.save()
@@ -104,6 +109,7 @@ def loadAll():
     host.load()
     hosts.load()
     currencies.load()
+    currencylookup.load()
     authhashes.load()
     checks.load()
     pubaccts.load()
