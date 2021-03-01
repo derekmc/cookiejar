@@ -312,22 +312,34 @@ def issueCurrency(args, sessid=0):
 """
 
 """
+    """
 # Issues a new check
 def createCheck(args, sessid=0):
     userid = getUser(sessid)
-    args.currency  
     lookup = args.currency + ":" + NAMESPACE;
+    amt = args.amount
     if not lookup in data.currencylookup:
         raise ValueError(f"No such currency {lookup}");
         # print(f"No such currency {lookup}");
     currencyid = data.currencylookup[lookup].CurrencyId
+    privacctid = userid + ":" + currencyid
+    if not privacctid in data.privaccts:
+        raise ValueError(f"User has no balance of {lookup}")
+    pubacctid = data.privaccts[privacctid].AcctId
+    balance = data.pubaccts[pubacctid].Balance
+    if balance < amt:
+        raise ValueError(f"Insufficient balance of {lookup}: {balance}.  {amt} requested.")
+        
+
     checksecret = randstr(IDLEN)
     checkhash = hash(checksecret)
     while(checkhash in data.checks):
         checksecret = randstr(IDLEN)
         checkhash = hash(checksecret)
-    data.checks.AddRow(checkhash, 
-    """
+    data.checks.AddRow(checkhash, currencyid, amt)
+    data.pubaccts[pubacctid].Balance = balance - amt
+    data.checks.save()
+    data.pubaccts.save()
 
 
 
