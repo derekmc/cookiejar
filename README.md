@@ -105,6 +105,8 @@ hashing functions, as well as established infrastructure for creating secure cha
 "Claiming" an account, requires issuing and recoginizing "cross-authenticating" tokens,
  between an original host, and a replacement host, designated 'host' and 'new-host.
 
+#TODO public key custodianship.
+
 In case a given replacement host does not work out, multiple "auth-hashes" are generated from distinct
 salts, and associated with a specific user-id (all user ids are relative to a specific original host).
 Having many differnt "auth-hashes" mitigates against replay attacks in case a replacement host's security is compromised.

@@ -37,6 +37,7 @@ AUTOPASSLEN = 3
 IDLEN = 10
 AUTHHASHES = 10
 SIGNUPFAIL = "Sorry, that password is not rare enough!"
+DEBUG = True
 
     
 def getUser(sessid=0):
@@ -152,7 +153,7 @@ def userLoginPassword(args, sessid=0):
     if not passwordhash in data.salts:
         print("Unknown user password.")
         return
-    salt = data.salts[passwordhash][1]
+    salt = data.salts[passwordhash].Salt
     cookie = hash(password + salt)
     # print("salt", salt)
     # print("cookie", cookie)
@@ -169,8 +170,8 @@ def userLoginCookie(args, sessid=0):
         # print("cookie: ", cookie)
         # print("cookies: ", str(data.cookies))
         return
-    userid = data.cookies[cookie][1]
-    name = data.users[userid][1]
+    userid = data.cookies[cookie].UserId
+    name = data.users[userid].Username
     if len(name) == 0:
         name = userid
 
@@ -196,13 +197,13 @@ def whoami(args, sessid=0):
         print(" Not logged in.")
     else:
         user = data.users[userid]
-        print(f" SiteCookie: '{user[3]}'")
-        if len(user[0]):
-            print(f" User Id: '{user[0]}'")
-        if len(user[1]):
-            print(f" Username: '{user[1]}'")
-        if len(user[2]):
-            print(f" Email: '{user[2]}'")
+        print(f" SiteCookie: '{user.SiteCookie}'")
+        if len(user.UserId):
+            print(f" User Id: '{user.UserId}'")
+        if len(user.Username):
+            print(f" Username: '{user.Username}'")
+        if len(user.Email):
+            print(f" Email: '{user.Email}'")
 
 
 def userLogout(args, sessid=0):
@@ -235,18 +236,18 @@ def mintCoin(args, sessid=0):
         print("TODO: issue check for supply of anonymous currency.");
         pass #TODO anonymously created currencies have all their balance put into one check.
     elif lookup in data.currencylookup:
-        currencyid = randstr(IDLEN)
-        while(currencyid in data.currencies): #theoretically this could infinite loop, but when are we gonna have that many users?
-            currencyid = randstr(IDLEN)
 
         #TODO allow issuers to issue more.
         raise ValueError("That currency already exists")
     else:
+        currencyid = randstr(IDLEN)
+        while(currencyid in data.currencies): #theoretically this could infinite loop, but when are we gonna have that many users?
+            currencyid = randstr(IDLEN)
         data.currencies.addRow(currencyid, NAMESPACE, name, issuer, supply, locked)
         data.currencylookup.addRow(lookup, currencyid)
 
         user = data.users[userid]
-        sitecookie = user[3]
+        sitecookie = user.SiteCookie
         sitepostcookie = hash(sitecookie)
         # TODO obfuscate pubaccts
         # compute pubacct info
@@ -265,7 +266,7 @@ def mintCoin(args, sessid=0):
         accthash = hash(acctid + ":" + userid + ":" + acctsecret)
         data.pubaccts.addRow(acctid, acctversion, accthash, currencyid, supply)
 
-        print(f"Minted {supply} units of currency {lookup} to \"{user[1]}\"({userid})")
+        print(f"Minted {supply} units of currency {lookup} to \"{user.Username}\"({userid})")
 
     data.pubaccts.save()
     data.privaccts.save()
@@ -277,6 +278,7 @@ def setNamespace(args, sessid=0):
     NAMESPACE = args.namespace
     setPrompt(f"cookiejar @{NAMESPACE} > ")
 
+"""
 def showMessages(args, sessid=0):
     userid = getUser(sessid)
     print("TODO")
@@ -307,17 +309,36 @@ def invoicePeer(args, sessid=0):
 def issueCurrency(args, sessid=0):
     userid = getUser(sessid)
     print("TODO")
+"""
 
+"""
 # Issues a new check
 def createCheck(args, sessid=0):
     userid = getUser(sessid)
-    print("TODO")
+    args.currency  
+    lookup = args.currency + ":" + NAMESPACE;
+    if not lookup in data.currencylookup:
+        raise ValueError(f"No such currency {lookup}");
+        # print(f"No such currency {lookup}");
+    currencyid = data.currencylookup[lookup].CurrencyId
+    checksecret = randstr(IDLEN)
+    checkhash = hash(checksecret)
+    while(checkhash in data.checks):
+        checksecret = randstr(IDLEN)
+        checkhash = hash(checksecret)
+    data.checks.AddRow(checkhash, 
+    """
+
+
+
+
 
 # Accept a check
 def acceptCheck(args, sessid=0):
     userid = getUser(sessid)
     print("TODO")
 
+"""
 def splitCheck(args, sessid=0):
     userid = getUser(sessid)
     print("TODO")
@@ -325,6 +346,7 @@ def splitCheck(args, sessid=0):
 def joinCheck(args, sessid=0):
     userid = getUser(sessid)
     print("TODO")
+"""
     
 def showSupply(args, sessid=0):
     userid = getUser(sessid)
@@ -335,17 +357,20 @@ def showAccount(args, sessid=0):
     print("TODO")
 
 # returns the anonymized backup for all data.
+"""
 def backupData(args, sessid=0):
     # userid = getUser(sessid)
     print("TODO")
+"""
 
 def showSiteId(args, sessid=0):
     #userid = getUser(sessid)
     host = data.host
-    hostname = list(host.keys())[0]
+    hostname = list(host.keys()).HostName
     siteid = host[hostname].SiteId
     print(" Site Id: %s" % siteid)
 
+"""
 def connectContractor(args, sessid=0):
     userid = getUser(sessid)
     print("TODO")
@@ -357,11 +382,13 @@ def connectClientPeer(args, sessid=0):
 def listTransactions(args, sessid=0):
     userid = getUser(sessid)
     print("TODO")
+"""
 
 def claimBackup(args, sessid=0):
     userid = getUser(sessid)
     print("TODO")
 
+"""
 # whenver history is enabled, this fact is reminded to the user after they login and after every command.
 def enableHistory(args, sessid=0):
     print("TODO")
@@ -369,6 +396,7 @@ def enableHistory(args, sessid=0):
 # clears the users transaction history and disables recording history.
 def disableHistory(args, sessid=0):
     print("TODO")
+"""
     
 
 if __name__ == "__main__":
@@ -382,10 +410,14 @@ if __name__ == "__main__":
         ["whoami", whoami, "display info on the logged in user."],
         ["cookie cookie", userLoginCookie, "Login using your cookie."],
         ["login password", userLoginPassword, "Login using your password (recommended to use cookie instead)."],
-        ["messages", showMessages, "mssages - show messages, such as peer connect requests, payment or invoice requests, cashed check notifications."],
+        # ["messages", showMessages, "mssages - show messages, such as peer connect requests, payment or invoice requests, cashed check notifications."],
         ["logout", userLogout, "logout"],
         ["mint coinname supply", mintCoin, "mints an amount of a coin if possible (ie you are the issuer and it is not locked)."],
-        ["namespace namespace", setNamespace, "sets the global sitewide namespace, for all coins and currencies."]
+        ["namespace namespace", setNamespace, "sets the global sitewide namespace, for all coins and currencies."],
+        # ["check currency amount", createCheck, "check: Creates a check for amount specified."],
+        ["accept checksecret", acceptCheck, "accept (checksecret) | accept (transactionid)"],
+        # ["getkey", getKey, "gets the logged in account's autogenerated private key"],
+        # ["setkey", setKey, "sets the logged in account's public key"],
         #["contractor peername", connectContractor, "connect to a contractor so they can invoice you."],
         #["client peername", connectClientPeer, "connect to a client peer so they can pay you."],
         #["disconnect peername", disconnectPeer, "disconnect from a peer"],
@@ -394,8 +426,6 @@ if __name__ == "__main__":
         ## no rejecting ["reject", rejectPeer, "reject (peer) [invoice] - reject an outstanding"],
         #["pay peername", payPeer, "pay (peer) (currency) (amount) [message]"],
         #["invoice peername", invoicePeer, "invoice (peer) (currency) (amount) [message]"],
-        #["check", createCheck, "check (name) (amount) [message] -> checkid. Creates a check for amount specified."],
-        #["accept", acceptCheck, "accept (checkid) | accept (transactionid)"],
         #["split", splitCheck, "split (checkid) (amount...) - Split a check into n smaller checks."],
         #["join", joinCheck, "join (checkid) (checkid) - Join two or more checks into 1 large check."],
         #["supply", showSupply, "show the supply of all currencies"],
