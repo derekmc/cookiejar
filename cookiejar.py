@@ -25,13 +25,14 @@ __sessions = {}  # sessid -> userid
 
 # Please see README.md for definitions on all the hashes and cookies, how they are computed, etc.
 
-from cmd import addCommand, evalLoop, setPrompt
+from cmd import addCommand, evalLoop, setPrompt, setSessionId
 
 SALTLEN = 5
 # Salts are secret, in order to make cracking user passwords more difficult.
 # To provide the authhashes, a user must randomly guess the salts, so don't make this too long, but also not too short either.
 SALTSECRET = 5
-AUTOPASSLEN = 23 
+AUTOPASSLEN = 3
+#AUTOPASSLEN = 23 
 
 IDLEN = 10
 AUTHHASHES = 10
@@ -47,6 +48,7 @@ def getUser(sessid=0):
         global __sessions
         userid = __sessions.get(sessid)
         if userid == None:
+            __sessions[sessid] = None
             return None
         return userid
     else:
@@ -93,7 +95,7 @@ def userSignup(args, sessid=0):
     # always compute checks to prevent timing attacks,
     # that could guess if password is in use.
     not_new = passwordhash in data.salts
-    not_rare = not rare(password)
+    not_rare = ALLOWUSERPASSWORDS and not rare(password)
     if not_new or not_rare:
         raise ValueError(SIGNUPFAIL)
         return
@@ -173,9 +175,14 @@ def userLoginCookie(args, sessid=0):
         name = userid
 
     if MULTIUSER:
-        if sessid == 0:
-            raise ValueError("Multiuser is enabled, and this action requires a non-zero sessid.")
         global __sessions
+        if sessid == 0:
+            # find an unused sessid.
+            sessid = 1
+            while(sessid in __sessions):
+                sessid += 1
+            setSessionId(sessid)
+            #raise ValueError("Multiuser is enabled, and this action requires a non-zero sessid.")
         __sessions[sessid] = userid
     else:
         global __userid
@@ -219,45 +226,46 @@ def mintCoin(args, sessid=0):
     namespace = NAMESPACE
     supply = int(args.supply)
     issuer = userid
-    currencyid = randstr(IDLEN)
-    while(currencyid in data.currencies): #theoretically this could infinite loop, but when are we gonna have that many users?
-        currencyid = randstr(IDLEN)
 
     anonymous = (userid == None)
     locked = True if anonymous else False # anonymously created currencies must be locked.
 
     lookup = name + ":" + namespace
-    if lookup in data.currencylookup:
+    if anonymous:
+        print("TODO: issue check for supply of anonymous currency.");
+        pass #TODO anonymously created currencies have all their balance put into one check.
+    elif lookup in data.currencylookup:
+        currencyid = randstr(IDLEN)
+        while(currencyid in data.currencies): #theoretically this could infinite loop, but when are we gonna have that many users?
+            currencyid = randstr(IDLEN)
+
         #TODO allow issuers to issue more.
         raise ValueError("That currency already exists")
     else:
         data.currencies.addRow(currencyid, NAMESPACE, name, issuer, supply, locked)
         data.currencylookup.addRow(lookup, currencyid)
 
-        if anonymous:
-            print("TODO: issue check for supply of anonymous currency.");
-            pass #TODO anonymously created currencies have all their balance put into one check.
-        else:
-            user = data.users[userid]
-            sitecookie = user[3]
-            sitepostcookie = hash(sitecookie)
-            # TODO obfuscate pubaccts
-            # compute pubacct info
+        user = data.users[userid]
+        sitecookie = user[3]
+        sitepostcookie = hash(sitecookie)
+        # TODO obfuscate pubaccts
+        # compute pubacct info
+        acctid = randstr(IDLEN)
+        while(acctid in data.pubaccts): #theoretically this could infinite loop, but when are we gonna have that many users?
             acctid = randstr(IDLEN)
-            while(acctid in data.pubaccts): #theoretically this could infinite loop, but when are we gonna have that many users?
-                acctid = randstr(IDLEN)
 
-            acctversion = randstr(IDLEN)
-            # for when you update an account, do this.
-            # while(acctversion == data.pubaccts[acctid]): # it should be okay, if the account version conflicts with a previous version, as it exists primarily, to make it difficult to track a specific account history, as account versions exist primarily to mitigate against potential replay attacks.
-            #   acctversion = randstr(IDLEN)
+        acctversion = randstr(IDLEN)
+        # for when you update an account, do this.
+        # while(acctversion == data.pubaccts[acctid]): # it should be okay, if the account version conflicts with a previous version, as it exists primarily, to make it difficult to track a specific account history, as account versions exist primarily to mitigate against potential replay attacks.
+        #   acctversion = randstr(IDLEN)
 
-            data.privaccts.addRow(userid + ":" + currencyid, acctid)
+        data.privaccts.addRow(userid + ":" + currencyid, acctid)
 
-            acctsecret = hash(acctid + ":" + acctversion + ":" + sitepostcookie)
-            accthash = hash(acctid + ":" + userid + ":" + acctsecret)
-            data.pubaccts.addRow(acctid, acctversion, accthash, currencyid, supply)
-        print(f"Minted {supply} units of currency {lookup}")
+        acctsecret = hash(acctid + ":" + acctversion + ":" + sitepostcookie)
+        accthash = hash(acctid + ":" + userid + ":" + acctsecret)
+        data.pubaccts.addRow(acctid, acctversion, accthash, currencyid, supply)
+
+        print(f"Minted {supply} units of currency {lookup} to \"{user[1]}\"({userid})")
 
     data.pubaccts.save()
     data.privaccts.save()

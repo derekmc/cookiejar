@@ -86,6 +86,10 @@ def isNonNegativeInteger(s):
 
 # preserve sessid, until it is unset.
 sessid = 0
+def setSessionId(_sessid):
+    global sessid
+    sessid = _sessid
+
 def runCommand(args):
     global sessid
     if len(args) == 0:
