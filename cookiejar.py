@@ -337,7 +337,7 @@ def createCheck(args, sessid=0):
         checksecret = randstr(IDLEN)
         checkhash = hash(checksecret)
     data.checks.addRow(checkhash, currencyid, amt)
-    data.pubaccts[pubacctid].Balance = balance - amt
+    data.pubaccts.setColumnField(pubacctid, "Balance", balance - amt)
     data.checks.save()
     data.pubaccts.save()
 
