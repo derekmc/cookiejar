@@ -331,6 +331,7 @@ def createCheck(args, sessid=0):
     balance = int(data.pubaccts[pubacctid].Balance)
     if balance < amt:
         raise ValueError(f"Insufficient balance of {lookup}: {balance}.  {amt} requested.")
+    remaining = balance - amt
         
 
     checksecret = randstr(IDLEN)
@@ -341,7 +342,7 @@ def createCheck(args, sessid=0):
     data.checks.addRow(checkhash, currencyid, amt)
     pubacct = data.pubaccts[pubacctid]
     del data.pubaccts[pubacctid]
-    data.pubaccts.addRow(pubacctid, pubacct.AcctVersion, pubacct.AcctHash, pubacct.CurrencyId, pubacct.Balance)
+    data.pubaccts.addRow(pubacctid, pubacct.AcctVersion, pubacct.AcctHash, pubacct.CurrencyId, remaining)
     data.checks.save()
     data.pubaccts.save()
     print(f"Check Id: \"{checksecret}\"")
