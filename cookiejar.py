@@ -316,6 +316,8 @@ def issueCurrency(args, sessid=0):
 # Issues a new check
 def createCheck(args, sessid=0):
     userid = getUser(sessid)
+    if userid == None:
+        raise ValueError(f"You must be logged in to issue a check.")
     lookup = args.currency + ":" + NAMESPACE;
     amt = int(args.amount)
     if not lookup in data.currencylookup:
@@ -337,9 +339,13 @@ def createCheck(args, sessid=0):
         checksecret = randstr(IDLEN)
         checkhash = hash(checksecret)
     data.checks.addRow(checkhash, currencyid, amt)
-    data.pubaccts.setColumnField(pubacctid, "Balance", balance - amt)
+    pubacct = data.pubaccts[pubacctid]
+    del data.pubaccts[pubacctid]
+    data.pubaccts.addRow(pubacctid, pubacct.AcctVersion, pubacct.AcctHash, pubacct.CurrencyId, pubacct.Balance)
     data.checks.save()
     data.pubaccts.save()
+    print(f"Check Id: \"{checksecret}\"")
+    print(f"Check issued for {amt} units of {lookup}")
 
 
 

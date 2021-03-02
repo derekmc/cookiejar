@@ -1,12 +1,12 @@
 
-import collections
+from collections import namedtuple
 import csv
 
 # if this needs to be fast, write to a ramdisk or something like that.
 
 class Table:
-    def __init__(self, customNamedTuple, filename):
-        self.TupleObject = customNamedTuple
+    def __init__(self, tupleObject, filename):
+        self.TupleObject = tupleObject
         self.rows = {}
         self.filename = filename
         pass
@@ -36,17 +36,13 @@ class Table:
             datarow = row
         self.rows[row[0]] = datarow
 
+    """
     def getColumnField(self, key, field):
         getattr(self.rows[key], field)
 
-    def setColumnField(self, key, field, value):
-        setattr(self.rows[key], field, value)
-
     def getColumnIndex(self, key, index):
         return self.rows[key][index]
-
-    def setColumnIndex(self, key, index, value):
-        self.rows[key][index] = value
+    """
 
     def __str__(self):
         result = ""
@@ -86,7 +82,7 @@ class Table:
             return False
 
 def TestSave():
-    Person = collections.namedtuple("Person", "name email password")
+    Person = namedtuple("Person", "name email password")
     people = Table(Person, "people.csv")
     people.addRow("cl", "bla@host.com", "opensesame123")
     people.addRow("joe", "bla@host.com", "opensesame123")
@@ -94,7 +90,7 @@ def TestSave():
     people.save()
 
 def TestLoad():
-    Person = collections.namedtuple("Person", "name email password")
+    Person = namedtuple("Person", "name email password")
     people = Table(Person, "people.csv")
     people.load()
     print("people:")
