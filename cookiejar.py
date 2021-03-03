@@ -39,6 +39,11 @@ AUTHHASHES = 10
 SIGNUPFAIL = "Sorry, that password is not rare enough!"
 DEBUG = True
 
+#########################
+#
+#  Helper functions
+#
+#########################
     
 def getUser(sessid=0):
     if not MULTIUSER and sessid > 0:
@@ -68,6 +73,57 @@ def authHashes(userid, password, n):
         result.append(authhash)
     return result
     
+   
+def updatePublicAccount(userid = None, currencylookup = None, newbalance = None, balancechange = None):
+    if userid == None:
+        raise ValueError("cannot update account for 'None' user.")
+    if currencylookup == None:
+        raise ValueError("cannot update a 'None' account.")
+    if newbalance == None and balanchange = None:
+        raise ValueError("newbalance or balancechange required to update account.")
+
+    if newbalance != None and balancechange != None
+        raise ValueError("updatePublicAccount: newbalance and balancechange were both specified. Choose one, not both.")
+
+    if not currencylookup in data.currencylookup:
+        raise ValueError("updatePublicAccount: there was no matching currency for provided 'currencylookup'")
+
+    currencyid = data.currencylookup[currencylookup].CurrencyId
+    privacctid = userid + ":" + currencyid
+
+    exists = privacctid in data.privaccts
+    pubacctid = None
+    balance = 0
+    if not exists:
+        pubacctid = randstr(IDLEN)
+        while(pubacctid in data.pubaccts): #theoretically this could infinite loop, but when are we gonna have that many users?
+            pubacctid = randstr(IDLEN)
+    else:
+        pubacctid = data.privaccts[privacctid].AcctId
+
+    if balancechange != None
+        newbalance = balance + balancechange
+    if newbalance < 0:
+        raise ValueError("balance may not be less than zero.
+
+    user = data.users[userid]
+    sitecookie = user.SiteCookie
+    sitepostcookie = hash(sitecookie)
+
+    acctversion = randstr(IDLEN)
+    acctsecret = hash(pubacctid + ":" + acctversion + ":" + sitepostcookie)
+    accthash = hash(pubacctid + ":" + userid + ":" + acctsecret)
+
+    data.pubaccts.addRow(pubacctid, acctversion, accthash, currencyid, newbalance)
+    if(DEBUG) print(f"updated {supply} units of currency {lookup} to \"{user.Username}\"({userid})")
+
+    
+#########################
+#
+#  API Functions
+#
+#########################
+
 def autoSignup(args, sessid=0):
     password = randstr(AUTOPASSLEN)
     passwordhash = hash(password)
@@ -217,7 +273,6 @@ def userLogout(args, sessid=0):
         __userid = None
 
     print(" User logged out.")
-   
 
 def mintCoin(args, sessid=0):
     userid = getUser(sessid)
@@ -236,7 +291,6 @@ def mintCoin(args, sessid=0):
         print("TODO: issue check for supply of anonymous currency.");
         pass #TODO anonymously created currencies have all their balance put into one check.
     elif lookup in data.currencylookup:
-
         #TODO allow issuers to issue more.
         raise ValueError("That currency already exists")
     else:
@@ -259,6 +313,7 @@ def mintCoin(args, sessid=0):
         # for when you update an account, do this.
         # while(acctversion == data.pubaccts[acctid]): # it should be okay, if the account version conflicts with a previous version, as it exists primarily, to make it difficult to track a specific account history, as account versions exist primarily to mitigate against potential replay attacks.
         #   acctversion = randstr(IDLEN)
+        updatePublicAccount(userid, acctid, 
 
         data.privaccts.addRow(userid + ":" + currencyid, acctid)
 
@@ -342,7 +397,9 @@ def createCheck(args, sessid=0):
     data.checks.addRow(checkhash, currencyid, amt)
     pubacct = data.pubaccts[pubacctid]
     del data.pubaccts[pubacctid]
-    data.pubaccts.addRow(pubacctid, pubacct.AcctVersion, pubacct.AcctHash, pubacct.CurrencyId, remaining)
+    acctversion = randstr(IDLEN)
+    accthash = 
+    data.pubaccts.addRow(pubacctid, acctversion, pubacct.AcctHash, pubacct.CurrencyId, remaining)
     data.checks.save()
     data.pubaccts.save()
     print(f"Check Id: \"{checksecret}\"")
@@ -355,8 +412,53 @@ def createCheck(args, sessid=0):
 # Accept a check
 def acceptCheck(args, sessid=0):
     userid = getUser(sessid)
-    print("TODO")
+    checksecret = args.checksecret
+    checkhash = hash(checksecret)
 
+    if(not checkhash in data.checks):
+        raise ValueError(f"Unknown check {checkhash}")
+
+    check = data.checks[checkhash]
+    currencyid = check.CurrencyId
+    if(not currencyid in data.currencies):
+        raise ValueError(f"Unexpected error. Unknown currency id")
+    currency = data.currencies[currencyid]
+    fullname = currency.Name + ":" + currency.Namespace
+    account 
+    bala
+    del data.checks[checkhash]
+
+        acctversion = randstr(IDLEN)
+        # for when you update an account, do this.
+        # while(acctversion == data.pubaccts[acctid]): # it should be okay, if the account version conflicts with a previous version, as it exists primarily, to make it difficult to track a specific account history, as account versions exist primarily to mitigate against potential replay attacks.
+        #   acctversion = randstr(IDLEN)
+
+        data.privaccts.addRow(userid + ":" + currencyid, acctid)
+
+        acctsecret = hash(acctid + ":" + acctversion + ":" + sitepostcookie)
+        accthash = hash(acctid + ":" + userid + ":" + acctsecret)
+        data.pubaccts.addRow(acctid, acctversion, accthash, currencyid, supply)
+
+
+def showAccounts(args, sessid=0):
+    userid = getUser(sessid)
+    if userid == None:
+        print("Not logged in.")
+        return
+    print("Account Balances:")
+    for currencyid in data.currencies.keys():
+        currency = data.currencies[currencyid]
+        fullname = currency.Name + ":" + currency.Namespace
+        privacctid = userid + ":" + currencyid
+        if not privacctid in data.privaccts:
+            continue
+        pubacctid = data.privaccts[privacctid].AcctId
+        acct = data.pubaccts[pubacctid]
+        print(f"\"{fullname}\" : {acct.Balance}")
+
+
+def currencySupply(args, sessid=0):
+    pass
 """
 def splitCheck(args, sessid=0):
     userid = getUser(sessid)
@@ -435,6 +537,8 @@ if __name__ == "__main__":
         ["namespace namespace", setNamespace, "sets the global sitewide namespace, for all coins and currencies."],
         ["check currency amount", createCheck, "check: Creates a check for amount specified."],
         ["accept checksecret", acceptCheck, "accept (checksecret) | accept (transactionid)"],
+        ["account", showAccounts, "Account balances for current user."],
+        ["supply currency", currencySupply, "Show the quantity of a specified currency which has been issued."],
         # ["getkey", getKey, "gets the logged in account's autogenerated private key"],
         # ["setkey", setKey, "sets the logged in account's public key"],
         #["contractor peername", connectContractor, "connect to a contractor so they can invoice you."],

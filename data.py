@@ -48,6 +48,7 @@ Name = namedtuple("Name", "Username UserId")
 Email = namedtuple("Email", "Email UserId Confirmed")
 
 # all the accounts 
+# privaccts merely link to pubaccts
 PrivAcct = namedtuple("PrivAcct", "UserId_CurrencyId AcctId")
 Namespace = namedtuple("Namespace", "NamespaceName AuthorityUrl")
 Host = namedtuple("Host", "HostName Url SiteId")
