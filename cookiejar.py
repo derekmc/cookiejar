@@ -3,6 +3,7 @@ from collections import namedtuple
 from util import randstr
 from hash import hash
 from passwords import rare
+import math
 import data
 
 # whether the service is multiplexed through an intermediate interface(ie a webserver),
@@ -11,7 +12,7 @@ import data
 # 0 is always a guest session / publicly available calls.
 ALLOWUSERPASSWORDS = False
 MULTIUSER = True
-NAMESPACE = "test"
+NAMESPACE = "sandbox"
 
 
 data.loadAll()
@@ -59,6 +60,22 @@ def getUser(sessid=0):
         return userid
     else:
         return __userid
+
+def getCurrencyLookup(currencyid):
+    if(not currencyid in data.currencies):
+        raise ValueError(f"Unexpected error. Unknown currency id")
+    currency = data.currencies[currencyid]
+    lookup = currency.Name + ":" + currency.Namespace
+    return lookup
+
+def getCurrencyId(lookup):
+    if(not lookup in data.currencylookup):
+        raise ValueError(f"Unexpected error. Unknown currency lookup.")
+    return data.currencylookup[lookup].CurrencyId
+
+
+
+
  
 # TODO use password dictionary
 def authHashes(userid, password, n):
@@ -74,15 +91,17 @@ def authHashes(userid, password, n):
     return result
     
    
+# Note: this does not actually save, you must manually save.
 def updatePublicAccount(userid = None, currencylookup = None, newbalance = None, balancechange = None):
+    # TODO test this
     if userid == None:
         raise ValueError("cannot update account for 'None' user.")
     if currencylookup == None:
         raise ValueError("cannot update a 'None' account.")
-    if newbalance == None and balanchange = None:
+    if newbalance == None and balancechange == None:
         raise ValueError("newbalance or balancechange required to update account.")
 
-    if newbalance != None and balancechange != None
+    if newbalance != None and balancechange != None:
         raise ValueError("updatePublicAccount: newbalance and balancechange were both specified. Choose one, not both.")
 
     if not currencylookup in data.currencylookup:
@@ -92,30 +111,41 @@ def updatePublicAccount(userid = None, currencylookup = None, newbalance = None,
     privacctid = userid + ":" + currencyid
 
     exists = privacctid in data.privaccts
-    pubacctid = None
     balance = 0
-    if not exists:
+
+    pubacctid = None
+    if exists:
+        pubacctid = data.privaccts[privacctid].AcctId
+        acct = data.pubaccts[pubacctid]
+        balance = int(acct.Balance)
+    else:
         pubacctid = randstr(IDLEN)
         while(pubacctid in data.pubaccts): #theoretically this could infinite loop, but when are we gonna have that many users?
             pubacctid = randstr(IDLEN)
-    else:
-        pubacctid = data.privaccts[privacctid].AcctId
 
-    if balancechange != None
+    if balancechange != None:
+        assert isinstance(balancechange, int), "balancechange was not an integer"
         newbalance = balance + balancechange
+
+    assert isinstance(newbalance, int), "balancechange was not an integer"
     if newbalance < 0:
-        raise ValueError("balance may not be less than zero.
+        raise ValueError("balance may not be less than zero.")
 
     user = data.users[userid]
     sitecookie = user.SiteCookie
     sitepostcookie = hash(sitecookie)
 
+
     acctversion = randstr(IDLEN)
     acctsecret = hash(pubacctid + ":" + acctversion + ":" + sitepostcookie)
     accthash = hash(pubacctid + ":" + userid + ":" + acctsecret)
 
+    if exists:
+        del data.pubaccts[pubacctid]
+    else:
+        data.privaccts.addRow(privacctid, pubacctid)
     data.pubaccts.addRow(pubacctid, acctversion, accthash, currencyid, newbalance)
-    if(DEBUG) print(f"updated {supply} units of currency {lookup} to \"{user.Username}\"({userid})")
+    # if(DEBUG): print(f"updated {newbalance} units of currency {currencylookup} to \"{user.Username}\"(userid: {userid})")
 
     
 #########################
@@ -281,6 +311,8 @@ def mintCoin(args, sessid=0):
     name = args.coinname
     namespace = NAMESPACE
     supply = int(args.supply)
+    if supply < 0:
+        raise ValueError("Can only mint non-negative amounts of a currency.")
     issuer = userid
 
     anonymous = (userid == None)
@@ -313,7 +345,7 @@ def mintCoin(args, sessid=0):
         # for when you update an account, do this.
         # while(acctversion == data.pubaccts[acctid]): # it should be okay, if the account version conflicts with a previous version, as it exists primarily, to make it difficult to track a specific account history, as account versions exist primarily to mitigate against potential replay attacks.
         #   acctversion = randstr(IDLEN)
-        updatePublicAccount(userid, acctid, 
+        updatePublicAccount(userid, lookup, supply)
 
         data.privaccts.addRow(userid + ":" + currencyid, acctid)
 
@@ -321,7 +353,13 @@ def mintCoin(args, sessid=0):
         accthash = hash(acctid + ":" + userid + ":" + acctsecret)
         data.pubaccts.addRow(acctid, acctversion, accthash, currencyid, supply)
 
-        print(f"Minted {supply} units of currency {lookup} to \"{user.Username}\"({userid})")
+        hint = ""
+        if supply > 9999:
+            power = int(math.log(supply, 10))
+            lead = int(supply / 10**(power-1))/10
+            hint = f" ({lead} x 10^{power})"
+
+        print(f"Minted {supply}{hint} units of currency {lookup} to \"{user.Username}\"({userid})")
 
     data.pubaccts.save()
     data.privaccts.save()
@@ -374,20 +412,10 @@ def createCheck(args, sessid=0):
     if userid == None:
         raise ValueError(f"You must be logged in to issue a check.")
     lookup = args.currency + ":" + NAMESPACE;
+    currencyid = getCurrencyId(lookup)
     amt = int(args.amount)
-    if not lookup in data.currencylookup:
-        raise ValueError(f"No such currency {lookup}");
-        # print(f"No such currency {lookup}");
-    currencyid = data.currencylookup[lookup].CurrencyId
-    privacctid = userid + ":" + currencyid
-    if not privacctid in data.privaccts:
-        raise ValueError(f"User has no balance of {lookup}")
-    pubacctid = data.privaccts[privacctid].AcctId
-    balance = int(data.pubaccts[pubacctid].Balance)
-    if balance < amt:
-        raise ValueError(f"Insufficient balance of {lookup}: {balance}.  {amt} requested.")
-    remaining = balance - amt
-        
+
+    updatePublicAccount(userid, lookup, balancechange = -amt) 
 
     checksecret = randstr(IDLEN)
     checkhash = hash(checksecret)
@@ -395,14 +423,9 @@ def createCheck(args, sessid=0):
         checksecret = randstr(IDLEN)
         checkhash = hash(checksecret)
     data.checks.addRow(checkhash, currencyid, amt)
-    pubacct = data.pubaccts[pubacctid]
-    del data.pubaccts[pubacctid]
-    acctversion = randstr(IDLEN)
-    accthash = 
-    data.pubaccts.addRow(pubacctid, acctversion, pubacct.AcctHash, pubacct.CurrencyId, remaining)
     data.checks.save()
     data.pubaccts.save()
-    print(f"Check Id: \"{checksecret}\"")
+    print(f"Check Secret: \"{checksecret}\"")
     print(f"Check issued for {amt} units of {lookup}")
 
 
@@ -420,24 +443,16 @@ def acceptCheck(args, sessid=0):
 
     check = data.checks[checkhash]
     currencyid = check.CurrencyId
-    if(not currencyid in data.currencies):
-        raise ValueError(f"Unexpected error. Unknown currency id")
-    currency = data.currencies[currencyid]
-    fullname = currency.Name + ":" + currency.Namespace
-    account 
-    bala
+    amt = check.Amount
+    lookup = getCurrencyLookup(currencyid)
+
+    updatePublicAccount(userid, lookup, balancechange=amt)
+
     del data.checks[checkhash]
-
-        acctversion = randstr(IDLEN)
-        # for when you update an account, do this.
-        # while(acctversion == data.pubaccts[acctid]): # it should be okay, if the account version conflicts with a previous version, as it exists primarily, to make it difficult to track a specific account history, as account versions exist primarily to mitigate against potential replay attacks.
-        #   acctversion = randstr(IDLEN)
-
-        data.privaccts.addRow(userid + ":" + currencyid, acctid)
-
-        acctsecret = hash(acctid + ":" + acctversion + ":" + sitepostcookie)
-        accthash = hash(acctid + ":" + userid + ":" + acctsecret)
-        data.pubaccts.addRow(acctid, acctversion, accthash, currencyid, supply)
+    data.pubaccts.save()
+    data.privaccts.save()
+    data.checks.save()
+    print(f"Check accepted for {amt} units of {lookup}")
 
 
 def showAccounts(args, sessid=0):
@@ -454,7 +469,14 @@ def showAccounts(args, sessid=0):
             continue
         pubacctid = data.privaccts[privacctid].AcctId
         acct = data.pubaccts[pubacctid]
-        print(f"\"{fullname}\" : {acct.Balance}")
+        balance = int(acct.Balance)
+        hint = ""
+        if abs(int(balance)) > 9999:
+            x = balance if balance > 0 else -balance
+            power = int(math.log(x, 10))
+            lead = int(balance / 10**(power-1))/10
+            hint = f" ({lead} x 10^{power})"
+        print(f"\"{fullname}\" : {balance}{hint}")
 
 
 def currencySupply(args, sessid=0):
